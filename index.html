@@ -1,0 +1,2203 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APLIKASI REKAP NILAI LOMBA PRAMUKA - KWARRAN 02 MASARAN</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        scout: {
+                            50: '#fdf8f4',
+                            100: '#f7ebd9',
+                            200: '#edd4b3',
+                            300: '#e1b785',
+                            400: '#d49658',
+                            500: '#b87333', /* Brown Scout Accent */
+                            600: '#8c5021',
+                            700: '#6d3c1a',
+                            800: '#4a2810', /* Main Scout Deep Brown */
+                            900: '#2b1608',
+                        },
+                        gold: '#f59e0b',
+                        silver: '#9ca3af',
+                        bronze: '#b45309'
+                    },
+                    fontFamily: {
+                        outfit: ['Outfit', 'sans-serif'],
+                        jakarta: ['Plus Jakarta Sans', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #2b1608;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(184, 115, 51, 0.25) 0%, transparent 45%),
+                radial-gradient(circle at 85% 85%, rgba(74, 40, 16, 0.4) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(212, 150, 88, 0.15) 0%, transparent 60%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: #f7ebd9;
+        }
+
+        .heading-font {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        /* Glassmorphism card styling */
+        .glass-card {
+            background: rgba(43, 22, 8, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(225, 183, 133, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .glass-card-light {
+            background: rgba(253, 248, 244, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(212, 150, 88, 0.3);
+            color: #2b1608;
+        }
+
+        /* Morph Animation Effect */
+        .morph-transition {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .morph-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+        }
+        .morph-card:hover {
+            transform: translateY(-4px) scale(1.01);
+            box-shadow: 0 12px 28px rgba(212, 150, 88, 0.25);
+            border-color: rgba(225, 183, 133, 0.5);
+        }
+
+        /* Gradient Text */
+        .gradient-text-scout {
+            background: linear-gradient(135deg, #f7ebd9 0%, #e1b785 50%, #f59e0b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .gradient-text-gold {
+            background: linear-gradient(135deg, #fef3c7 0%, #f59e0b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(43, 22, 8, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #8c5021;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #b87333;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #b87333 0%, #6d3c1a 100%);
+            color: #ffffff;
+            border-bottom: 3px solid #f59e0b;
+            box-shadow: 0 4px 15px rgba(184, 115, 51, 0.4);
+        }
+
+        .sidebar-item.active {
+            background: linear-gradient(90deg, rgba(184, 115, 51, 0.8) 0%, rgba(109, 60, 26, 0.4) 100%);
+            border-left: 4px solid #f59e0b;
+            color: #ffffff;
+        }
+
+        /* Table animations */
+        tbody tr {
+            transition: background-color 0.2s ease;
+        }
+        tbody tr:hover {
+            background-color: rgba(225, 183, 133, 0.1);
+        }
+    </style>
+</head>
+<body class="antialiased text-scout-100 selection:bg-scout-500 selection:text-white min-h-screen flex flex-col">
+
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3 pointer-events-none"></div>
+
+    <div id="login-container" class="min-h-screen w-full flex items-center justify-center p-4 sm:p-6 morph-transition">
+        <div class="max-w-4xl w-full rounded-3xl overflow-hidden glass-card shadow-2xl border border-scout-300/30">
+            <!-- Header Banner -->
+            <div class="bg-gradient-to-r from-scout-900 via-scout-800 to-scout-900 p-6 sm:p-8 text-center border-b border-scout-400/20 relative overflow-hidden">
+                <div class="absolute -right-10 -top-10 w-40 h-40 bg-scout-500/20 rounded-full blur-2xl pointer-events-none"></div>
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-scout-400 to-scout-700 mb-3 shadow-lg ring-4 ring-scout-300/30">
+                    <i class="fa-solid fa-compass-drafting text-3xl text-scout-100"></i>
+                </div>
+                <h1 class="heading-font text-2xl sm:text-4xl font-extrabold gradient-text-scout tracking-wide uppercase">
+                    APLIKASI REKAP NILAI LOMBA PRAMUKA
+                </h1>
+                <p class="text-scout-300 font-semibold tracking-wider text-sm sm:text-base mt-1 uppercase">
+                    JENJANG SD - KWARRAN 02 MASARAN
+                </p>
+                <span class="inline-block mt-3 px-4 py-1 rounded-full text-xs font-bold bg-scout-500/30 text-scout-200 border border-scout-400/30">
+                    <i class="fa-solid fa-shield-halved mr-1.5 text-gold"></i> TIK / REKAP DIGITAL PRAMUKA
+                </span>
+            </div>
+
+            <!-- 2-Column Login Form -->
+            <div class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-scout-400/20 bg-scout-900/40">
+                <!-- Column 1: Admin Access -->
+                <div class="p-6 sm:p-8 flex flex-col justify-between hover:bg-scout-800/30 transition-colors">
+                    <div>
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="w-10 h-10 rounded-xl bg-scout-500/30 flex items-center justify-center text-scout-300 border border-scout-400/30">
+                                <i class="fa-solid fa-user-gear text-lg"></i>
+                            </div>
+                            <div>
+                                <h2 class="heading-font text-xl font-bold text-white">Akses Pembina / Admin</h2>
+                                <p class="text-xs text-scout-300">Hak akses penuh untuk mengedit & input data</p>
+                            </div>
+                        </div>
+
+                        <form id="form-admin-login" onsubmit="handleAdminLogin(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-scout-300 mb-1.5">Nama Kwarran</label>
+                                <div class="relative">
+                                    <i class="fa-solid fa-building-flag absolute left-3.5 top-3.5 text-scout-400 text-sm"></i>
+                                    <input type="text" id="admin-kwarran" value="KWARRAN MASARAN text-slate-100" class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-scout-900/80 border border-scout-400/40 text-white placeholder-scout-400 focus:outline-none focus:border-scout-300 focus:ring-2 focus:ring-scout-400/30 text-sm" placeholder="Masukkan Nama Kwarran" required readonly>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-scout-300 mb-1.5">Password Admin</label>
+                                <div class="relative">
+                                    <i class="fa-solid fa-key absolute left-3.5 top-3.5 text-scout-400 text-sm"></i>
+                                    <input type="password" id="admin-pass" class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-scout-900/80 border border-scout-400/40 text-white placeholder-scout-400 focus:outline-none focus:border-scout-300 focus:ring-2 focus:ring-scout-400/30 text-sm" placeholder="••••••••" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="w-full py-3 px-4 bg-gradient-to-r from-scout-500 to-scout-700 hover:from-scout-400 hover:to-scout-600 text-white font-bold rounded-xl shadow-lg shadow-scout-900/50 hover:shadow-scout-500/30 transition-all flex items-center justify-center gap-2 group">
+                                <span>Masuk Sebagai Admin</span>
+                                <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                            </button>
+                        </form>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-scout-400/10 text-xs text-scout-400 italic">
+                        * Input password khusus untuk Pembina Kwarran Masaran.
+                    </div>
+                </div>
+
+                <!-- Column 2: Gudep Viewer Access -->
+                <div class="p-6 sm:p-8 flex flex-col justify-between hover:bg-scout-800/30 transition-colors">
+                    <div>
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400 border border-emerald-500/30">
+                                <i class="fa-solid fa-eye text-lg"></i>
+                            </div>
+                            <div>
+                                <h2 class="heading-font text-xl font-bold text-white">Akses Lihat Gudep</h2>
+                                <p class="text-xs text-scout-300">Akses lihat rekap nilai & peringkat pangkalan</p>
+                            </div>
+                        </div>
+
+                        <form id="form-gudep-login" onsubmit="handleGudepLogin(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-scout-300 mb-1.5">Nama Pangkalan / Gudep SD</label>
+                                <div class="relative">
+                                    <i class="fa-solid fa-school absolute left-3.5 top-3.5 text-scout-400 text-sm"></i>
+                                    <input type="text" id="gudep-name-input" class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-scout-900/80 border border-scout-400/40 text-white placeholder-scout-400 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/30 text-sm" placeholder="Contoh: SD N 1 Masaran" required>
+                                </div>
+                            </div>
+                            <div class="p-3 bg-scout-900/50 rounded-xl border border-scout-400/20 text-xs text-scout-300">
+                                <i class="fa-solid fa-circle-info text-emerald-400 mr-1"></i> Mode Gudep dapat melihat papan skor, peringkat, dan statistik secara realtime.
+                            </div>
+                            <button type="submit" class="w-full py-3 px-4 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white font-bold rounded-xl shadow-lg hover:shadow-emerald-600/30 transition-all flex items-center justify-center gap-2 group">
+                                <span>Masuk Mode Viewer</span>
+                                <i class="fa-solid fa-right-to-bracket group-hover:translate-x-1 transition-transform"></i>
+                            </button>
+                        </form>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-scout-400/10 text-xs text-scout-400 italic">
+                        * Tanpa password, hanya akses membaca rekap nilai.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Credit -->
+            <div class="bg-scout-950 p-4 text-center border-t border-scout-400/20 text-xs text-scout-300 font-medium">
+                Aplikasi ini dikembangkan oleh <span class="text-gold font-bold">Hendra Budiarsa, S.Pd</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="main-app" class="hidden min-h-screen flex flex-col flex-1 morph-transition">
+        
+        <!-- TOP NAVIGATION BAR -->
+        <header class="glass-card sticky top-0 z-40 border-b border-scout-400/30 px-4 py-3 shadow-xl">
+            <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <button onclick="toggleSidebar()" class="p-2.5 rounded-xl bg-scout-800/80 text-scout-200 hover:bg-scout-700 hover:text-white transition-all border border-scout-400/30 focus:outline-none">
+                        <i class="fa-solid fa-bars text-lg"></i>
+                    </button>
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-scout-400 to-scout-600 flex items-center justify-center text-white font-bold shadow-md">
+                            <i class="fa-solid fa-campground text-sm"></i>
+                        </div>
+                        <div>
+                            <h1 class="heading-font font-bold text-base sm:text-lg text-white leading-tight">APLIKASI REKAP NILAI LOMBA PRAMUKA</h1>
+                            <p class="text-xs text-scout-300 flex items-center gap-2">
+                                <span>KWARRAN 02 MASARAN</span>
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                <span id="user-role-badge" class="text-gold font-semibold">Admin</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Profile & Action -->
+                <div class="flex items-center gap-3">
+                    <div id="logged-user-info" class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-scout-900/80 border border-scout-400/30 text-xs text-scout-200">
+                        <i class="fa-solid fa-user-circle text-scout-400 text-sm"></i>
+                        <span id="logged-user-name" class="font-bold">Admin</span>
+                    </div>
+                    <button onclick="handleLogout()" class="px-3.5 py-2 rounded-xl bg-red-600/20 hover:bg-red-600/40 text-red-300 border border-red-500/30 text-xs font-bold transition-all flex items-center gap-1.5">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span class="hidden sm:inline">Keluar</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- TOP MAIN MENU TABS -->
+            <div class="max-w-7xl mx-auto mt-3 overflow-x-auto no-scrollbar flex items-center gap-1 border-t border-scout-400/20 pt-2">
+                <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn active px-4 py-2 rounded-xl font-bold text-xs sm:text-sm whitespace-nowrap transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-chart-pie"></i> Dashboard
+                </button>
+                <button onclick="switchTab('peserta')" id="tab-peserta" class="tab-btn px-4 py-2 rounded-xl font-bold text-xs sm:text-sm text-scout-300 hover:text-white hover:bg-scout-800/50 whitespace-nowrap transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-users"></i> Data Peserta
+                </button>
+                <button onclick="switchTab('input-hiking')" id="tab-input-hiking" class="tab-btn px-4 py-2 rounded-xl font-bold text-xs sm:text-sm text-scout-300 hover:text-white hover:bg-scout-800/50 whitespace-nowrap transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-person-hiking"></i> Lomba Hiking
+                </button>
+                <button onclick="switchTab('input-bola')" id="tab-input-bola" class="tab-btn px-4 py-2 rounded-xl font-bold text-xs sm:text-sm text-scout-300 hover:text-white hover:bg-scout-800/50 whitespace-nowrap transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-basketball"></i> Bola Pantul
+                </button>
+                <button onclick="switchTab('input-pioneering')" id="tab-input-pioneering" class="tab-btn px-4 py-2 rounded-xl font-bold text-xs sm:text-sm text-scout-300 hover:text-white hover:bg-scout-800/50 whitespace-nowrap transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-cubes"></i> Pioneering
+                </button>
+                <button onclick="switchTab('input-pensi')" id="tab-input-pensi" class="tab-btn px-4 py-2 rounded-xl font-bold text-xs sm:text-sm text-scout-300 hover:text-white hover:bg-scout-800/50 whitespace-nowrap transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-masks-theater"></i> Pensi
+                </button>
+                <button onclick="switchTab('input-tenda')" id="tab-input-tenda" class="tab-btn px-4 py-2 rounded-xl font-bold text-xs sm:text-sm text-scout-300 hover:text-white hover:bg-scout-800/50 whitespace-nowrap transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-tent"></i> Tapak Tenda
+                </button>
+                <button onclick="switchTab('peringkat-umum')" id="tab-peringkat-umum" class="tab-btn px-4 py-2 rounded-xl font-bold text-xs sm:text-sm text-amber-400 hover:text-amber-300 hover:bg-amber-950/40 whitespace-nowrap transition-all flex items-center gap-2 border border-amber-500/30">
+                    <i class="fa-solid fa-trophy text-gold"></i> Peringkat Umum
+                </button>
+            </div>
+        </header>
+
+        <div class="flex flex-1 relative max-w-7xl w-full mx-auto px-4 py-6 gap-6">
+            
+            <aside id="app-sidebar" class="w-64 glass-card rounded-2xl p-4 flex flex-col gap-2 shrink-0 hidden md:flex h-fit sticky top-36 border border-scout-400/30">
+                <div class="text-xs font-bold uppercase text-scout-400 px-3 pt-2 tracking-wider">Navigasi Utama</div>
+                
+                <button onclick="switchTab('dashboard')" id="side-dashboard" class="sidebar-item active w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-3">
+                    <i class="fa-solid fa-chart-line w-4 text-center"></i> Dashboard Informatif
+                </button>
+
+                <button onclick="switchTab('peserta')" id="side-peserta" class="sidebar-item w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold text-scout-300 hover:text-white transition-all flex items-center gap-3">
+                    <i class="fa-solid fa-address-book w-4 text-center"></i> Data & Daftar Peserta
+                </button>
+
+                <div class="text-xs font-bold uppercase text-scout-400 px-3 pt-3 tracking-wider">Input & Rekap Lomba</div>
+
+                <button onclick="switchTab('input-hiking')" id="side-input-hiking" class="sidebar-item w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold text-scout-300 hover:text-white transition-all flex items-center gap-3">
+                    <i class="fa-solid fa-person-hiking w-4 text-center text-amber-400"></i> <span id="side-lbl-hiking">Hiking (5 Pos)</span>
+                </button>
+
+                <button onclick="switchTab('input-bola')" id="side-input-bola" class="sidebar-item w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold text-scout-300 hover:text-white transition-all flex items-center gap-3">
+                    <i class="fa-solid fa-basketball w-4 text-center text-orange-400"></i> <span id="side-lbl-bola">Bola Pantul</span>
+                </button>
+
+                <button onclick="switchTab('input-pioneering')" id="side-input-pioneering" class="sidebar-item w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold text-scout-300 hover:text-white transition-all flex items-center gap-3">
+                    <i class="fa-solid fa-cubes w-4 text-center text-yellow-400"></i> <span id="side-lbl-pioneering">Pioneering</span>
+                </button>
+
+                <button onclick="switchTab('input-pensi')" id="side-input-pensi" class="sidebar-item w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold text-scout-300 hover:text-white transition-all flex items-center gap-3">
+                    <i class="fa-solid fa-masks-theater w-4 text-center text-purple-400"></i> <span id="side-lbl-pensi">Pensi (Kelompok)</span>
+                </button>
+
+                <button onclick="switchTab('input-tenda')" id="side-input-tenda" class="sidebar-item w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold text-scout-300 hover:text-white transition-all flex items-center gap-3">
+                    <i class="fa-solid fa-tent w-4 text-center text-emerald-400"></i> <span id="side-lbl-tenda">Tapak Tenda</span>
+                </button>
+
+                <div class="text-xs font-bold uppercase text-scout-400 px-3 pt-3 tracking-wider">Hasil Rekap</div>
+
+                <button onclick="switchTab('peringkat-umum')" id="side-peringkat-umum" class="sidebar-item w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold text-gold hover:text-yellow-200 transition-all flex items-center gap-3 bg-amber-950/20 border border-amber-500/20">
+                    <i class="fa-solid fa-trophy w-4 text-center text-gold"></i> Peringkat Umum Lomba
+                </button>
+
+                <div class="admin-only mt-4 pt-3 border-t border-scout-400/20">
+                    <button onclick="openModalEditLomba()" class="w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold text-scout-300 hover:text-white hover:bg-scout-800/60 transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-pen-to-square text-scout-400"></i> Edit Nama Lomba
+                    </button>
+                    <button onclick="resetAllData()" class="w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold text-red-400 hover:text-red-300 hover:bg-red-950/40 transition-all flex items-center gap-2 mt-1">
+                        <i class="fa-solid fa-trash-arrow-up"></i> Reset Data
+                    </button>
+                </div>
+            </aside>
+
+            <!-- MAIN CONTENT DISPLAY AREA -->
+            <main class="flex-1 min-w-0">
+                
+                <div id="view-dashboard" class="space-y-6 morph-transition">
+                    <!-- Dashboard Welcome Header -->
+                    <div class="glass-card rounded-2xl p-6 relative overflow-hidden border border-scout-400/30">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 z-10 relative">
+                            <div>
+                                <span class="px-3 py-1 rounded-full text-xs font-bold bg-scout-500/30 text-gold border border-scout-400/30 inline-block mb-2">
+                                    <i class="fa-solid fa-award mr-1"></i> Dashboard Lomba SD Masaran
+                                </span>
+                                <h2 class="heading-font text-2xl sm:text-3xl font-extrabold text-white">
+                                    Selamat Datang di Portal Rekapitulasi Lomba
+                                </h2>
+                                <p class="text-xs sm:text-sm text-scout-200 mt-1 max-w-2xl">
+                                    Pantau statistik peserta, input perolehan skor, dan lihat hasil pemenang secara otomatis & akurat di Kwarran 02 Masaran.
+                                </p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="switchTab('peserta')" class="px-4 py-2.5 rounded-xl bg-scout-500 hover:bg-scout-400 text-white text-xs font-bold shadow-lg transition-all flex items-center gap-2">
+                                    <i class="fa-solid fa-user-plus"></i> Tambah Peserta
+                                </button>
+                                <button onclick="switchTab('peringkat-umum')" class="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-scout-950 text-xs font-bold shadow-lg transition-all flex items-center gap-2">
+                                    <i class="fa-solid fa-trophy"></i> Peringkat Umum
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Futuristic Color Cards Dashboard Metric -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="morph-card p-5 rounded-2xl bg-gradient-to-br from-indigo-900/80 to-blue-900/60 border border-blue-500/30 shadow-xl">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-blue-200 uppercase tracking-wider">Total Peserta</span>
+                                <div class="w-10 h-10 rounded-xl bg-blue-500/30 flex items-center justify-center text-blue-300">
+                                    <i class="fa-solid fa-users text-lg"></i>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <span id="dash-stat-total" class="heading-font text-3xl font-extrabold text-white">0</span>
+                                <span class="text-xs text-blue-200 ml-2">Regu</span>
+                            </div>
+                            <div class="mt-2 text-xs text-blue-300 flex items-center justify-between pt-2 border-t border-blue-500/20">
+                                <span>Putra: <strong id="dash-stat-pa" class="text-white">0</strong></span>
+                                <span>Putri: <strong id="dash-stat-pi" class="text-white">0</strong></span>
+                            </div>
+                        </div>
+
+                        <div class="morph-card p-5 rounded-2xl bg-gradient-to-br from-amber-900/80 to-orange-900/60 border border-amber-500/30 shadow-xl">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-amber-200 uppercase tracking-wider">Mata Lomba</span>
+                                <div class="w-10 h-10 rounded-xl bg-amber-500/30 flex items-center justify-center text-amber-300">
+                                    <i class="fa-solid fa-layer-group text-lg"></i>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <span class="heading-font text-3xl font-extrabold text-white">5</span>
+                                <span class="text-xs text-amber-200 ml-2">Kategori Lomba</span>
+                            </div>
+                            <div class="mt-2 text-xs text-amber-300 flex items-center gap-1 pt-2 border-t border-amber-500/20">
+                                <i class="fa-solid fa-circle-check text-emerald-400"></i> Sandi, Bola, Pioneering, dll.
+                            </div>
+                        </div>
+
+                        <div class="morph-card p-5 rounded-2xl bg-gradient-to-br from-emerald-900/80 to-teal-900/60 border border-emerald-500/30 shadow-xl">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-emerald-200 uppercase tracking-wider">Gudep Terdaftar</span>
+                                <div class="w-10 h-10 rounded-xl bg-emerald-500/30 flex items-center justify-center text-emerald-300">
+                                    <i class="fa-solid fa-school text-lg"></i>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <span id="dash-stat-gudep" class="heading-font text-3xl font-extrabold text-white">0</span>
+                                <span class="text-xs text-emerald-200 ml-2">Pangkalan SD</span>
+                            </div>
+                            <div class="mt-2 text-xs text-emerald-300 flex items-center gap-1 pt-2 border-t border-emerald-500/20">
+                                <i class="fa-solid fa-location-dot"></i> Masaran 02
+                            </div>
+                        </div>
+
+                        <div class="morph-card p-5 rounded-2xl bg-gradient-to-br from-purple-900/80 to-fuchsia-900/60 border border-purple-500/30 shadow-xl">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-purple-200 uppercase tracking-wider">Status Input</span>
+                                <div class="w-10 h-10 rounded-xl bg-purple-500/30 flex items-center justify-center text-purple-300">
+                                    <i class="fa-solid fa-pen-ruler text-lg"></i>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <span id="dash-stat-progress" class="heading-font text-3xl font-extrabold text-white">0%</span>
+                                <span class="text-xs text-purple-200 ml-2">Terekap</span>
+                            </div>
+                            <div class="mt-2 text-xs text-purple-300 flex items-center gap-1 pt-2 border-t border-purple-500/20">
+                                <i class="fa-solid fa-bolt text-gold"></i> Peringkat Otomatis
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Shortcuts Grid -->
+                    <div class="glass-card rounded-2xl p-6 border border-scout-400/30">
+                        <h3 class="heading-font text-lg font-bold text-white mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-bolt text-gold"></i> Akses Cepat Sub-Lomba
+                        </h3>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                            <button onclick="switchTab('input-hiking')" class="p-4 rounded-xl bg-scout-900/80 hover:bg-scout-800 border border-amber-500/30 text-left transition-all hover:-translate-y-1 group">
+                                <i class="fa-solid fa-person-hiking text-2xl text-amber-400 mb-2 group-hover:scale-110 transition-transform"></i>
+                                <div id="lbl-dash-hiking" class="font-bold text-sm text-white">HIKING</div>
+                                <div class="text-[10px] text-scout-300">5 Pos (Sandi, Dasadarma, etc)</div>
+                            </button>
+                            <button onclick="switchTab('input-bola')" class="p-4 rounded-xl bg-scout-900/80 hover:bg-scout-800 border border-orange-500/30 text-left transition-all hover:-translate-y-1 group">
+                                <i class="fa-solid fa-basketball text-2xl text-orange-400 mb-2 group-hover:scale-110 transition-transform"></i>
+                                <div id="lbl-dash-bola" class="font-bold text-sm text-white">BOLA PANTUL</div>
+                                <div class="text-[10px] text-scout-300">Putra & Putri</div>
+                            </button>
+                            <button onclick="switchTab('input-pioneering')" class="p-4 rounded-xl bg-scout-900/80 hover:bg-scout-800 border border-yellow-500/30 text-left transition-all hover:-translate-y-1 group">
+                                <i class="fa-solid fa-cubes text-2xl text-yellow-400 mb-2 group-hover:scale-110 transition-transform"></i>
+                                <div id="lbl-dash-pioneering" class="font-bold text-sm text-white">PIONEERING</div>
+                                <div class="text-[10px] text-scout-300">Putra & Putri</div>
+                            </button>
+                            <button onclick="switchTab('input-pensi')" class="p-4 rounded-xl bg-scout-900/80 hover:bg-scout-800 border border-purple-500/30 text-left transition-all hover:-translate-y-1 group">
+                                <i class="fa-solid fa-masks-theater text-2xl text-purple-400 mb-2 group-hover:scale-110 transition-transform"></i>
+                                <div id="lbl-dash-pensi" class="font-bold text-sm text-white">PENSI</div>
+                                <div class="text-[10px] text-scout-300">Rekap Kelompok</div>
+                            </button>
+                            <button onclick="switchTab('input-tenda')" class="p-4 rounded-xl bg-scout-900/80 hover:bg-scout-800 border border-emerald-500/30 text-left transition-all hover:-translate-y-1 group">
+                                <i class="fa-solid fa-tent text-2xl text-emerald-400 mb-2 group-hover:scale-110 transition-transform"></i>
+                                <div id="lbl-dash-tenda" class="font-bold text-sm text-white">TAPAK TENDA</div>
+                                <div class="text-[10px] text-scout-300">Rekap Kelompok</div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Top 3 General Leaderboard Preview -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Top Gudep Leaderboard -->
+                        <div class="glass-card rounded-2xl p-5 border border-scout-400/30">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="heading-font font-bold text-white flex items-center gap-2">
+                                    <i class="fa-solid fa-crown text-gold"></i> Peringkat Teratas Pangkalan
+                                </h3>
+                                <button onclick="switchTab('peringkat-umum')" class="text-xs text-scout-300 hover:text-gold font-semibold">
+                                    Lihat Semua <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                                </button>
+                            </div>
+                            <div id="dash-top-gudep-list" class="space-y-3">
+                                <!-- Dynamic item injected here -->
+                            </div>
+                        </div>
+
+                        <!-- Data Peserta Terdaftar Quick View -->
+                        <div class="glass-card rounded-2xl p-5 border border-scout-400/30">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="heading-font font-bold text-white flex items-center gap-2">
+                                    <i class="fa-solid fa-list-ol text-scout-300"></i> Peserta Terbaru
+                                </h3>
+                                <button onclick="switchTab('peserta')" class="text-xs text-scout-300 hover:text-gold font-semibold">
+                                    Kelola Peserta <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                                </button>
+                            </div>
+                            <div id="dash-recent-peserta-list" class="space-y-2">
+                                <!-- Dynamic recent list -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-peserta" class="hidden space-y-6 morph-transition">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div>
+                            <h2 class="heading-font text-2xl font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-address-book text-scout-400"></i> Kelola Data Peserta
+                            </h2>
+                            <p class="text-xs text-scout-300">Cukup input 2 data saja (Nomor Gudep & Jenis Kelamin) untuk menyimpan.</p>
+                        </div>
+                        <button onclick="switchTab('dashboard')" class="px-3.5 py-2 rounded-xl bg-scout-800 hover:bg-scout-700 text-xs font-bold text-scout-200 border border-scout-400/30 transition-all flex items-center gap-2">
+                            <i class="fa-solid fa-arrow-left"></i> Kembali ke Dashboard
+                        </button>
+                    </div>
+
+                    <!-- Input Form Container -->
+                    <div class="admin-only glass-card rounded-2xl p-6 border border-scout-400/30">
+                        <h3 id="peserta-form-title" class="heading-font font-bold text-scout-200 mb-4 text-sm uppercase tracking-wider">
+                            <i class="fa-solid fa-plus-circle text-emerald-400 mr-1"></i> Form Input Data Peserta
+                        </h3>
+                        <form id="form-peserta" onsubmit="savePeserta(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <input type="hidden" id="peserta-edit-id" value="">
+                            
+                            <div>
+                                <label class="block text-xs font-bold text-scout-300 uppercase mb-1">Nomor Peserta/Gudep *</label>
+                                <input type="number" id="input-nomor-peserta" min="1" class="w-full px-3.5 py-2.5 rounded-xl bg-scout-900 border border-scout-400/40 text-white focus:outline-none focus:border-scout-300 text-sm" placeholder="Contoh: 01" required>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-scout-300 uppercase mb-1">Jenis Kelamin *</label>
+                                <select id="input-jk-peserta" class="w-full px-3.5 py-2.5 rounded-xl bg-scout-900 border border-scout-400/40 text-white focus:outline-none focus:border-scout-300 text-sm" required>
+                                    <option value="">-- Pilih Jenis Kelamin --</option>
+                                    <option value="Putra">Putra (Pa)</option>
+                                    <option value="Putri">Putri (Pi)</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-scout-300 uppercase mb-1">Nama Pangkalan Gudep SD (Opsional)</label>
+                                <input type="text" id="input-gudep-peserta" class="w-full px-3.5 py-2.5 rounded-xl bg-scout-900 border border-scout-400/40 text-white focus:outline-none focus:border-scout-300 text-sm" placeholder="Contoh: SD N 1 Masaran">
+                            </div>
+
+                            <div class="sm:col-span-3 flex justify-end gap-2 pt-2">
+                                <button type="button" onclick="cancelEditPeserta()" id="btn-cancel-peserta" class="hidden px-4 py-2 rounded-xl bg-scout-800 text-scout-300 text-xs font-bold hover:bg-scout-700">
+                                    Batal
+                                </button>
+                                <button type="submit" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-scout-500 to-scout-700 hover:from-scout-400 hover:to-scout-600 text-white text-xs font-bold shadow-lg transition-all flex items-center gap-2">
+                                    <i class="fa-solid fa-floppy-disk"></i> <span id="btn-save-peserta-lbl">Simpan Data Peserta</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Participant Table List -->
+                    <div class="glass-card rounded-2xl overflow-hidden border border-scout-400/30">
+                        <div class="p-4 bg-scout-900/60 border-b border-scout-400/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <span class="font-bold text-sm text-white uppercase tracking-wider flex items-center gap-2">
+                                <i class="fa-solid fa-list text-gold"></i> Daftar Peserta (Diurutkan Berdasarkan Nomor)
+                            </span>
+                            <div class="relative w-full sm:w-64">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-scout-400 text-xs"></i>
+                                <input type="text" id="search-peserta" oninput="renderPesertaTable()" placeholder="Cari nomor/gudep..." class="w-full pl-8 pr-3 py-1.5 rounded-lg bg-scout-900 border border-scout-400/30 text-xs text-white focus:outline-none focus:border-scout-300">
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs sm:text-sm">
+                                <thead class="bg-scout-900 text-scout-300 font-bold uppercase tracking-wider border-b border-scout-400/20">
+                                    <tr>
+                                        <th class="p-3.5 text-center w-16">No Urut</th>
+                                        <th class="p-3.5">Nomor Peserta</th>
+                                        <th class="p-3.5">Nama Pangkalan Gudep</th>
+                                        <th class="p-3.5 text-center">Jenis Kelamin</th>
+                                        <th class="p-3.5 text-center admin-only w-28">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-peserta-body" class="divide-y divide-scout-400/10 text-scout-100">
+                                    <!-- Dynamic Rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-input-hiking" class="hidden space-y-6 morph-transition">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                KATEGORI LOMBA
+                            </span>
+                            <h2 id="title-lomba-hiking" class="heading-font text-2xl font-extrabold text-white">
+                                HIKING (5 POS PENILAIAN)
+                            </h2>
+                            <p class="text-xs text-scout-300">Meliputi Pos: Sandi, Dasadarma, Mata Angin, Asean, & Simpul (Peringkat tie-breaker berdasarkan Waktu Simpul ms).</p>
+                        </div>
+                        <button onclick="switchTab('dashboard')" class="px-3.5 py-2 rounded-xl bg-scout-800 hover:bg-scout-700 text-xs font-bold text-scout-200 border border-scout-400/30 transition-all flex items-center gap-2">
+                            <i class="fa-solid fa-arrow-left"></i> Kembali ke Dashboard
+                        </button>
+                    </div>
+
+                    <!-- Hiking Score Input Form -->
+                    <div class="admin-only glass-card rounded-2xl p-6 border border-amber-500/30">
+                        <h3 class="heading-font font-bold text-amber-300 mb-4 text-sm uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-pen-nib"></i> Form Input / Edit Nilai Hiking
+                        </h3>
+                        <form id="form-hiking" onsubmit="saveHikingScore(event)" class="space-y-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-scout-300 uppercase mb-1">Pilih Peserta *</label>
+                                    <select id="hiking-peserta-id" class="w-full px-3.5 py-2.5 rounded-xl bg-scout-900 border border-scout-400/40 text-white text-sm focus:outline-none focus:border-amber-400" required>
+                                        <!-- Dynamic options -->
+                                    </select>
+                                </div>
+                                <div class="p-3 bg-scout-900/40 rounded-xl border border-scout-400/20 text-xs text-scout-300 flex items-center gap-2">
+                                    <i class="fa-solid fa-stopwatch text-amber-400 text-xl"></i>
+                                    <span>Peringkat Hiking dihitung dari <strong>Total Nilai 5 Pos</strong>. Jika nilai sama, pemenang ditentukan oleh <strong>Waktu Simpul Tercepat</strong>.</span>
+                                </div>
+                            </div>
+
+                            <!-- 5 Pos Inputs -->
+                            <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-2">
+                                <div class="p-3 bg-scout-900/80 rounded-xl border border-scout-400/30">
+                                    <label class="block text-[11px] font-bold text-amber-200 uppercase mb-1">1. Sandi</label>
+                                    <input type="number" step="0.01" min="0" id="h-sandi" class="w-full px-2.5 py-1.5 rounded-lg bg-scout-950 border border-scout-400/40 text-white font-mono text-sm focus:outline-none focus:border-amber-400" placeholder="0" required>
+                                </div>
+                                <div class="p-3 bg-scout-900/80 rounded-xl border border-scout-400/30">
+                                    <label class="block text-[11px] font-bold text-amber-200 uppercase mb-1">2. Dasadarma</label>
+                                    <input type="number" step="0.01" min="0" id="h-dasa" class="w-full px-2.5 py-1.5 rounded-lg bg-scout-950 border border-scout-400/40 text-white font-mono text-sm focus:outline-none focus:border-amber-400" placeholder="0" required>
+                                </div>
+                                <div class="p-3 bg-scout-900/80 rounded-xl border border-scout-400/30">
+                                    <label class="block text-[11px] font-bold text-amber-200 uppercase mb-1">3. Mata Angin</label>
+                                    <input type="number" step="0.01" min="0" id="h-mata" class="w-full px-2.5 py-1.5 rounded-lg bg-scout-950 border border-scout-400/40 text-white font-mono text-sm focus:outline-none focus:border-amber-400" placeholder="0" required>
+                                </div>
+                                <div class="p-3 bg-scout-900/80 rounded-xl border border-scout-400/30">
+                                    <label class="block text-[11px] font-bold text-amber-200 uppercase mb-1">4. ASEAN</label>
+                                    <input type="number" step="0.01" min="0" id="h-asean" class="w-full px-2.5 py-1.5 rounded-lg bg-scout-950 border border-scout-400/40 text-white font-mono text-sm focus:outline-none focus:border-amber-400" placeholder="0" required>
+                                </div>
+                                <div class="p-3 bg-scout-900/80 rounded-xl border border-scout-400/30">
+                                    <label class="block text-[11px] font-bold text-amber-200 uppercase mb-1">5. Simpul</label>
+                                    <input type="number" step="0.01" min="0" id="h-simpul" class="w-full px-2.5 py-1.5 rounded-lg bg-scout-950 border border-scout-400/40 text-white font-mono text-sm focus:outline-none focus:border-amber-400" placeholder="0" required>
+                                </div>
+                            </div>
+
+                            <!-- Waktu Simpul Input (Millisecond Precision) -->
+                            <div class="p-4 bg-amber-950/40 rounded-xl border border-amber-500/30 grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
+                                <label class="block text-xs font-bold text-amber-300 uppercase">
+                                    <i class="fa-solid fa-clock mr-1"></i> Waktu Penyelesaian Simpul (Format MM:SS.ms) *
+                                </label>
+                                <div class="sm:col-span-2 flex items-center gap-2">
+                                    <input type="number" min="0" id="h-min" class="w-20 px-3 py-2 rounded-lg bg-scout-950 border border-amber-500/40 text-white text-center font-mono text-sm" placeholder="Menit">
+                                    <span class="text-white font-bold">:</span>
+                                    <input type="number" min="0" max="59" id="h-sec" class="w-20 px-3 py-2 rounded-lg bg-scout-950 border border-amber-500/40 text-white text-center font-mono text-sm" placeholder="Detik">
+                                    <span class="text-white font-bold">.</span>
+                                    <input type="number" min="0" max="999" id="h-ms" class="w-24 px-3 py-2 rounded-lg bg-scout-950 border border-amber-500/40 text-white text-center font-mono text-sm" placeholder="ms (0-999)">
+                                    <span class="text-xs text-scout-300">ms</span>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-end pt-2">
+                                <button type="submit" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white text-xs font-bold shadow-lg transition-all flex items-center gap-2">
+                                    <i class="fa-solid fa-floppy-disk"></i> Simpan Nilai Hiking
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Rekapitulasi & Peringkat Hiking Tabbed Putra / Putri -->
+                    <div class="space-y-4">
+                        <div class="flex border-b border-scout-400/30">
+                            <button onclick="switchHikingGender('Putra')" id="tab-hiking-pa" class="px-5 py-2.5 font-bold text-xs uppercase tracking-wider border-b-2 border-amber-400 text-amber-300 flex items-center gap-2">
+                                <i class="fa-solid fa-mars text-blue-400"></i> Rekap Hiking Putra
+                            </button>
+                            <button onclick="switchHikingGender('Putri')" id="tab-hiking-pi" class="px-5 py-2.5 font-bold text-xs uppercase tracking-wider border-b-2 border-transparent text-scout-400 hover:text-white flex items-center gap-2">
+                                <i class="fa-solid fa-venus text-pink-400"></i> Rekap Hiking Putri
+                            </button>
+                        </div>
+
+                        <div class="glass-card rounded-2xl overflow-hidden border border-scout-400/30">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs sm:text-sm">
+                                    <thead class="bg-scout-900 text-scout-300 font-bold uppercase tracking-wider border-b border-scout-400/20">
+                                        <tr>
+                                            <th class="p-3 text-center w-12">Peringkat</th>
+                                            <th class="p-3">No Peserta</th>
+                                            <th class="p-3">Nama Pangkalan</th>
+                                            <th class="p-3 text-center">Sandi</th>
+                                            <th class="p-3 text-center">Dasadarma</th>
+                                            <th class="p-3 text-center">Mata Angin</th>
+                                            <th class="p-3 text-center">ASEAN</th>
+                                            <th class="p-3 text-center">Simpul</th>
+                                            <th class="p-3 text-center text-amber-300">Waktu Simpul</th>
+                                            <th class="p-3 text-center text-gold bg-scout-950/60">Total Skor</th>
+                                            <th class="p-3 text-center admin-only w-20">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="table-hiking-body" class="divide-y divide-scout-400/10">
+                                        <!-- Dynamic rows -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-input-bola" class="hidden space-y-6 morph-transition">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-orange-500/20 text-orange-300 border border-orange-500/30">
+                                KATEGORI TERPISAH PUTRA / PUTRI
+                            </span>
+                            <h2 id="title-lomba-bola" class="heading-font text-2xl font-extrabold text-white">
+                                BOLA PANTUL
+                            </h2>
+                            <p class="text-xs text-scout-300">Rekapitulasi dan peringkat terpisah antara Putra dan Putri.</p>
+                        </div>
+                        <button onclick="switchTab('dashboard')" class="px-3.5 py-2 rounded-xl bg-scout-800 hover:bg-scout-700 text-xs font-bold text-scout-200 border border-scout-400/30 transition-all">
+                            <i class="fa-solid fa-arrow-left"></i> Dashboard
+                        </button>
+                    </div>
+
+                    <!-- Single Score Form Template -->
+                    <div class="admin-only glass-card rounded-2xl p-6 border border-orange-500/30">
+                        <h3 class="heading-font font-bold text-orange-300 mb-4 text-sm uppercase tracking-wider">
+                            Form Input Nilai Bola Pantul
+                        </h3>
+                        <form onsubmit="saveSingleScore(event, 'bola')" class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                            <div>
+                                <label class="block text-xs font-bold text-scout-300 uppercase mb-1">Pilih Peserta *</label>
+                                <select id="bola-peserta-id" class="w-full px-3.5 py-2.5 rounded-xl bg-scout-900 border border-scout-400/40 text-white text-sm focus:outline-none" required>
+                                    <!-- Dynamic -->
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-scout-300 uppercase mb-1">Nilai Lomba Bola Pantul *</label>
+                                <input type="number" step="0.01" min="0" id="bola-score" class="w-full px-3.5 py-2.5 rounded-xl bg-scout-900 border border-scout-400/40 text-white text-sm font-mono focus:outline-none" placeholder="Masukkan Skor" required>
+                            </div>
+                            <div>
+                                <button type="submit" class="w-full py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold shadow-lg transition-all flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-floppy-disk"></i> Simpan Nilai Bola Pantul
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Rekap Putra & Putri -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Putra Table -->
+                        <div class="glass-card rounded-2xl overflow-hidden border border-blue-500/30">
+                            <div class="p-3.5 bg-blue-950/60 border-b border-blue-500/20 font-bold text-xs uppercase text-blue-300 flex items-center justify-between">
+                                <span><i class="fa-solid fa-mars mr-1"></i> Rekap Bola Pantul - Putra</span>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs">
+                                    <thead class="bg-scout-900 text-scout-300 font-bold uppercase">
+                                        <tr>
+                                            <th class="p-3 text-center w-12">Rank</th>
+                                            <th class="p-3">No</th>
+                                            <th class="p-3">Pangkalan Gudep</th>
+                                            <th class="p-3 text-center text-gold">Nilai</th>
+                                            <th class="p-3 text-center admin-only w-16">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="table-bola-pa" class="divide-y divide-scout-400/10"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Putri Table -->
+                        <div class="glass-card rounded-2xl overflow-hidden border border-pink-500/30">
+                            <div class="p-3.5 bg-pink-950/60 border-b border-pink-500/20 font-bold text-xs uppercase text-pink-300 flex items-center justify-between">
+                                <span><i class="fa-solid fa-venus mr-1"></i> Rekap Bola Pantul - Putri</span>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs">
+                                    <thead class="bg-scout-900 text-scout-300 font-bold uppercase">
+                                        <tr>
+                                            <th class="p-3 text-center w-12">Rank</th>
+                                            <th class="p-3">No</th>
+                                            <th class="p-3">Pangkalan Gudep</th>
+                                            <th class="p-3 text-center text-gold">Nilai</th>
+                                            <th class="p-3 text-center admin-only w-16">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="table-bola-pi" class="divide-y divide-scout-400/10"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-input-pioneering" class="hidden space-y-6 morph-transition">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-yellow-500/20 text-yellow-300 border border-yellow-500/30">
+                                KATEGORI TERPISAH PUTRA / PUTRI
+                            </span>
+                            <h2 id="title-lomba-pioneering" class="heading-font text-2xl font-extrabold text-white">
+                                PIONEERING
+                            </h2>
+                            <p class="text-xs text-scout-300">Rekapitulasi dan peringkat terpisah antara Putra dan Putri.</p>
+                        </div>
+                        <button onclick="switchTab('dashboard')" class="px-3.5 py-2 rounded-xl bg-scout-800 hover:bg-scout-700 text-xs font-bold text-scout-200 border border-scout-400/30 transition-all">
+                            <i class="fa-solid fa-arrow-left"></i> Dashboard
+                        </button>
+                    </div>
+
+                    <div class="admin-only glass-card rounded-2xl p-6 border border-yellow-500/30">
+                        <h3 class="heading-font font-bold text-yellow-300 mb-4 text-sm uppercase tracking-wider">
+                            Form Input Nilai Pioneering
+                        </h3>
+                        <form onsubmit="saveSingleScore(event, 'pioneering')" class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                            <div>
+                                <label class="block text-xs font-bold text-scout-300 uppercase mb-1">Pilih Peserta *</label>
+                                <select id="pioneering-peserta-id" class="w-full px-3.5 py-2.5 rounded-xl bg-scout-900 border border-scout-400/40 text-white text-sm focus:outline-none" required>
+                                    <!-- Dynamic -->
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-scout-300 uppercase mb-1">Nilai Lomba Pioneering *</label>
+                                <input type="number" step="0.01" min="0" id="pioneering-score" class="w-full px-3.5 py-2.5 rounded-xl bg-scout-900 border border-scout-400/40 text-white text-sm font-mono focus:outline-none" placeholder="Masukkan Skor" required>
+                            </div>
+                            <div>
+                                <button type="submit" class="w-full py-2.5 rounded-xl bg-yellow-600 hover:bg-yellow-500 text-white text-xs font-bold shadow-lg transition-all flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-floppy-disk"></i> Simpan Nilai Pioneering
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Putra Table -->
+                        <div class="glass-card rounded-2xl overflow-hidden border border-blue-500/30">
+                            <div class="p-3.5 bg-blue-950/60 border-b border-blue-500/20 font-bold text-xs uppercase text-blue-300">
+                                <i class="fa-solid fa-mars mr-1"></i> Rekap Pioneering - Putra
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs">
+                                    <thead class="bg-scout-900 text-scout-300 font-bold uppercase">
+                                        <tr>
+                                            <th class="p-3 text-center w-12">Rank</th>
+                                            <th class="p-3">No</th>
+                                            <th class="p-3">Pangkalan Gudep</th>
+                                            <th class="p-3 text-center text-gold">Nilai</th>
+                                            <th class="p-3 text-center admin-only w-16">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="table-pioneering-pa" class="divide-y divide-scout-400/10"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Putri Table -->
+                        <div class="glass-card rounded-2xl overflow-hidden border border-pink-500/30">
+                            <div class="p-3.5 bg-pink-950/60 border-b border-pink-500/20 font-bold text-xs uppercase text-pink-300">
+                                <i class="fa-solid fa-venus mr-1"></i> Rekap Pioneering - Putri
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs">
+                                    <thead class="bg-scout-900 text-scout-300 font-bold uppercase">
+                                        <tr>
+                                            <th class="p-3 text-center w-12">Rank</th>
+                                            <th class="p-3">No</th>
+                                            <th class="p-3">Pangkalan Gudep</th>
+                                            <th class="p-3 text-center text-gold">Nilai</th>
+                                            <th class="p-3 text-center admin-only w-16">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="table-pioneering-pi" class="divide-y divide-scout-400/10"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-input-pensi" class="hidden space-y-6 morph-transition">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                                KATEGORI KELOMPOK (GUDEP SAMAN / PA & PI)
+                            </span>
+                            <h2 id="title-lomba-pensi" class="heading-font text-2xl font-extrabold text-white">
+                                PENTAS SENI (PENSI)
+                            </h2>
+                            <p class="text-xs text-scout-300">Nilai & peringkat digabungkan secara pangkalan kelompok (Nomor & Nama Gudep Sama).</p>
+                        </div>
+                        <button onclick="switchTab('dashboard')" class="px-3.5 py-2 rounded-xl bg-scout-800 hover:bg-scout-700 text-xs font-bold text-scout-200 border border-scout-400/30 transition-all">
+                            <i class="fa-solid fa-arrow-left"></i> Dashboard
+                        </button>
+                    </div>
+
+                    <div class="admin-only glass-card rounded-2xl p-6 border border-purple-500/30">
+                        <h3 class="heading-font font-bold text-purple-300 mb-4 text-sm uppercase tracking-wider">
+                            Form Input Nilai Pensi Kelompok Gudep
+                        </h3>
+                        <form onsubmit="saveGroupScore(event, 'pensi')" class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                            <div>
+                                <label class="block text-xs font-bold text-scout-300 uppercase mb-1">Pilih Pangkalan / Regu Gudep *</label>
+                                <select id="pensi-gudep-no" class="w-full px-3.5 py-2.5 rounded-xl bg-scout-900 border border-scout-400/40 text-white text-sm focus:outline-none" required>
+                                    <!-- Dynamic options per Gudep number -->
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-scout-300 uppercase mb-1">Nilai Pensi Kelompok *</label>
+                                <input type="number" step="0.01" min="0" id="pensi-score" class="w-full px-3.5 py-2.5 rounded-xl bg-scout-900 border border-scout-400/40 text-white text-sm font-mono focus:outline-none" placeholder="Masukkan Skor Pensi" required>
+                            </div>
+                            <div>
+                                <button type="submit" class="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold shadow-lg transition-all flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-floppy-disk"></i> Simpan Data Pensi
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Rekap Table Group -->
+                    <div class="glass-card rounded-2xl overflow-hidden border border-purple-500/30">
+                        <div class="p-3.5 bg-purple-950/60 border-b border-purple-500/20 font-bold text-xs uppercase text-purple-300 flex items-center justify-between">
+                            <span><i class="fa-solid fa-masks-theater mr-1"></i> Rekapitulasi & Peringkat Pensi (Kelompok Gudep)</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs sm:text-sm">
+                                <thead class="bg-scout-900 text-scout-300 font-bold uppercase">
+                                    <tr>
+                                        <th class="p-3 text-center w-16">Peringkat</th>
+                                        <th class="p-3">No Peserta Gudep</th>
+                                        <th class="p-3">Nama Pangkalan Gudep</th>
+                                        <th class="p-3 text-center">Komposisi Tim</th>
+                                        <th class="p-3 text-center text-gold bg-scout-950/60">Nilai Kelompok</th>
+                                        <th class="p-3 text-center admin-only w-20">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-pensi-body" class="divide-y divide-scout-400/10"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-input-tenda" class="hidden space-y-6 morph-transition">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                                KATEGORI KELOMPOK (GUDEP SAMAN / PA & PI)
+                            </span>
+                            <h2 id="title-lomba-tenda" class="heading-font text-2xl font-extrabold text-white">
+                                TAPAK TENDA
+                            </h2>
+                            <p class="text-xs text-scout-300">Nilai & peringkat digabungkan secara pangkalan kelompok (Nomor & Nama Gudep Sama).</p>
+                        </div>
+                        <button onclick="switchTab('dashboard')" class="px-3.5 py-2 rounded-xl bg-scout-800 hover:bg-scout-700 text-xs font-bold text-scout-200 border border-scout-400/30 transition-all">
+                            <i class="fa-solid fa-arrow-left"></i> Dashboard
+                        </button>
+                    </div>
+
+                    <div class="admin-only glass-card rounded-2xl p-6 border border-emerald-500/30">
+                        <h3 class="heading-font font-bold text-emerald-300 mb-4 text-sm uppercase tracking-wider">
+                            Form Input Nilai Tapak Tenda Kelompok
+                        </h3>
+                        <form onsubmit="saveGroupScore(event, 'tenda')" class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                            <div>
+                                <label class="block text-xs font-bold text-scout-300 uppercase mb-1">Pilih Pangkalan / Regu Gudep *</label>
+                                <select id="tenda-gudep-no" class="w-full px-3.5 py-2.5 rounded-xl bg-scout-900 border border-scout-400/40 text-white text-sm focus:outline-none" required>
+                                    <!-- Dynamic -->
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-scout-300 uppercase mb-1">Nilai Tapak Tenda Kelompok *</label>
+                                <input type="number" step="0.01" min="0" id="tenda-score" class="w-full px-3.5 py-2.5 rounded-xl bg-scout-900 border border-scout-400/40 text-white text-sm font-mono focus:outline-none" placeholder="Masukkan Skor Tenda" required>
+                            </div>
+                            <div>
+                                <button type="submit" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg transition-all flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-floppy-disk"></i> Simpan Data Tapak Tenda
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Rekap Table Group -->
+                    <div class="glass-card rounded-2xl overflow-hidden border border-emerald-500/30">
+                        <div class="p-3.5 bg-emerald-950/60 border-b border-emerald-500/20 font-bold text-xs uppercase text-emerald-300 flex items-center justify-between">
+                            <span><i class="fa-solid fa-tent mr-1"></i> Rekapitulasi & Peringkat Tapak Tenda (Kelompok Gudep)</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs sm:text-sm">
+                                <thead class="bg-scout-900 text-scout-300 font-bold uppercase">
+                                    <tr>
+                                        <th class="p-3 text-center w-16">Peringkat</th>
+                                        <th class="p-3">No Peserta Gudep</th>
+                                        <th class="p-3">Nama Pangkalan Gudep</th>
+                                        <th class="p-3 text-center">Komposisi Tim</th>
+                                        <th class="p-3 text-center text-gold bg-scout-950/60">Nilai Kelompok</th>
+                                        <th class="p-3 text-center admin-only w-20">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-tenda-body" class="divide-y divide-scout-400/10"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-peringkat-umum" class="hidden space-y-6 morph-transition">
+                    <div class="glass-card p-6 rounded-2xl border border-amber-500/40 bg-gradient-to-r from-scout-900 via-amber-950/40 to-scout-900 relative overflow-hidden">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 z-10 relative">
+                            <div>
+                                <span class="px-3 py-1 rounded-full text-xs font-extrabold bg-gold/20 text-gold border border-gold/40 uppercase tracking-widest inline-block mb-2">
+                                    <i class="fa-solid fa-trophy mr-1"></i> KEJUARAAN UMUM
+                                </span>
+                                <h2 class="heading-font text-2xl sm:text-3xl font-black gradient-text-gold uppercase">
+                                    REKAPITULASI & PERINGKAT UMUM
+                                </h2>
+                                <p class="text-xs sm:text-sm text-scout-200 mt-1">
+                                    Total akumulasi seluruh nilai lomba (Hiking, Bola Pantul, Pioneering, Pensi, dan Tapak Tenda) tingkat SD KWARRAN MASARAN.
+                                </p>
+                            </div>
+
+                            <div class="flex flex-wrap items-center gap-2">
+                                <button onclick="exportToExcel()" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg transition-all flex items-center gap-2">
+                                    <i class="fa-solid fa-file-excel text-base"></i> Download Excel / Spreadsheet
+                                </button>
+                                <button onclick="window.print()" class="px-3.5 py-2.5 rounded-xl bg-scout-800 hover:bg-scout-700 text-scout-200 text-xs font-bold border border-scout-400/30 transition-all flex items-center gap-1.5">
+                                    <i class="fa-solid fa-print"></i> Cetak
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filter / Switch Tab Category Overall -->
+                    <div class="flex flex-wrap gap-2 border-b border-scout-400/20 pb-3">
+                        <button onclick="switchOverallCategory('gudep')" id="btn-ov-gudep" class="px-4 py-2 rounded-xl text-xs font-bold bg-amber-500 text-scout-950 shadow-md">
+                            <i class="fa-solid fa-school mr-1"></i> Peringkat Umum Pangkalan (Gudep)
+                        </button>
+                        <button onclick="switchOverallCategory('putra')" id="btn-ov-putra" class="px-4 py-2 rounded-xl text-xs font-bold bg-scout-800 text-scout-300 hover:text-white">
+                            <i class="fa-solid fa-mars mr-1 text-blue-400"></i> Rekap Rincian Lomba Putra
+                        </button>
+                        <button onclick="switchOverallCategory('putri')" id="btn-ov-putri" class="px-4 py-2 rounded-xl text-xs font-bold bg-scout-800 text-scout-300 hover:text-white">
+                            <i class="fa-solid fa-venus mr-1 text-pink-400"></i> Rekap Rincian Lomba Putri
+                        </button>
+                    </div>
+
+                    <!-- Champion Podium Top 3 (Only shown for Gudep view) -->
+                    <div id="gudep-podium-container" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Dynamic Top 3 Cards -->
+                    </div>
+
+                    <!-- Detailed Full Matrix Table -->
+                    <div class="glass-card rounded-2xl overflow-hidden border border-amber-500/30">
+                        <div class="p-4 bg-scout-900/80 border-b border-scout-400/20 flex items-center justify-between">
+                            <h3 id="overall-table-title" class="heading-font font-bold text-white text-sm uppercase tracking-wider flex items-center gap-2">
+                                <i class="fa-solid fa-table-list text-gold"></i> Rincian Seluruh Skor Lomba
+                            </h3>
+                            <span class="text-xs text-scout-300 font-mono" id="ov-count-info">0 Record</span>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-scout-950 text-scout-300 font-bold uppercase tracking-wider border-b border-scout-400/20">
+                                    <tr id="overall-table-header">
+                                        <!-- Dynamic Header depending on filter -->
+                                    </tr>
+                                </thead>
+                                <tbody id="overall-table-body" class="divide-y divide-scout-400/10 font-medium">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal Edit Nama Lomba -->
+    <div id="modal-edit-lomba" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm hidden morph-transition">
+        <div class="glass-card max-w-md w-full rounded-2xl p-6 border border-scout-400/30 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-scout-400/20 pb-3 mb-4">
+                <h3 class="heading-font font-bold text-white text-base flex items-center gap-2">
+                    <i class="fa-solid fa-pen-to-square text-amber-400"></i> Edit Nama Lomba Latihan
+                </h3>
+                <button onclick="closeModalEditLomba()" class="text-scout-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="saveCustomLombaNames(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-scout-300 uppercase mb-1">Nama Lomba 1 (Hiking)</label>
+                    <input type="text" id="edit-lomba-hiking" class="w-full px-3 py-2 rounded-xl bg-scout-900 border border-scout-400/40 text-white text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-scout-300 uppercase mb-1">Nama Lomba 2 (Bola Pantul)</label>
+                    <input type="text" id="edit-lomba-bola" class="w-full px-3 py-2 rounded-xl bg-scout-900 border border-scout-400/40 text-white text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-scout-300 uppercase mb-1">Nama Lomba 3 (Pioneering)</label>
+                    <input type="text" id="edit-lomba-pioneering" class="w-full px-3 py-2 rounded-xl bg-scout-900 border border-scout-400/40 text-white text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-scout-300 uppercase mb-1">Nama Lomba 4 (Pensi)</label>
+                    <input type="text" id="edit-lomba-pensi" class="w-full px-3 py-2 rounded-xl bg-scout-900 border border-scout-400/40 text-white text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-scout-300 uppercase mb-1">Nama Lomba 5 (Tapak Tenda)</label>
+                    <input type="text" id="edit-lomba-tenda" class="w-full px-3 py-2 rounded-xl bg-scout-900 border border-scout-400/40 text-white text-xs">
+                </div>
+                <div class="flex justify-end gap-2 pt-3">
+                    <button type="button" onclick="closeModalEditLomba()" class="px-4 py-2 rounded-xl bg-scout-800 text-xs font-bold text-scout-300">Batal</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-scout-500 hover:bg-scout-400 text-xs font-bold text-white">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        /* ==========================================================================
+           CORE APPLICATION STATE & INITIALIZATION
+           ========================================================================== */
+        
+        // Initial state load from localStorage or default template
+        const DEFAULT_COMP_NAMES = {
+            hiking: "HIKING",
+            bola: "BOLA PANTUL",
+            pioneering: "PIONEERING",
+            pensi: "PENSI",
+            tenda: "TAPAK TENDA"
+        };
+
+        let appData = {
+            userRole: null, // 'admin' or 'viewer'
+            userName: '',
+            compNames: { ...DEFAULT_COMP_NAMES },
+            peserta: [
+                { id: "P01", nomor: "01", jk: "Putra", gudep: "SD N 1 Masaran" },
+                { id: "P02", nomor: "01", jk: "Putri", gudep: "SD N 1 Masaran" },
+                { id: "P03", nomor: "02", jk: "Putra", gudep: "SD N 2 Masaran" },
+                { id: "P04", nomor: "02", jk: "Putri", gudep: "SD N 2 Masaran" },
+                { id: "P05", nomor: "03", jk: "Putra", gudep: "SD N 3 Masaran" },
+                { id: "P06", nomor: "03", jk: "Putri", gudep: "SD N 3 Masaran" }
+            ],
+            // Scores keyed by participant ID
+            hikingScores: {
+                "P01": { sandi: 90, dasa: 85, mata: 88, asean: 92, simpul: 95, timeMs: 145200 }, // 2m 25.200s
+                "P02": { sandi: 88, dasa: 90, mata: 85, asean: 90, simpul: 92, timeMs: 152100 },
+                "P03": { sandi: 95, dasa: 92, mata: 90, asean: 94, simpul: 96, timeMs: 130500 },
+                "P04": { sandi: 92, dasa: 88, mata: 92, asean: 88, simpul: 90, timeMs: 160000 },
+                "P05": { sandi: 80, dasa: 85, mata: 80, asean: 85, simpul: 88, timeMs: 175000 },
+                "P06": { sandi: 85, dasa: 82, mata: 88, asean: 86, simpul: 85, timeMs: 168000 }
+            },
+            bolaScores: {
+                "P01": 85, "P02": 90, "P03": 92, "P04": 88, "P05": 78, "P06": 80
+            },
+            pioneeringScores: {
+                "P01": 92, "P02": 88, "P03": 95, "P04": 90, "P05": 82, "P06": 85
+            },
+            // Group scores keyed by Gudep Number (e.g. "01")
+            pensiScores: {
+                "01": 90, "02": 94, "03": 85
+            },
+            tendaScores: {
+                "01": 92, "02": 89, "03": 88
+            }
+        };
+
+        let currentActiveTab = 'dashboard';
+        let currentHikingGender = 'Putra';
+        let currentOverallFilter = 'gudep';
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadSavedState();
+            setupUIByRole();
+            updateAllLombaLabels();
+            renderDashboard();
+        });
+
+        function saveStateToLocalStorage() {
+            try {
+                localStorage.setItem('scout_masaran_rekap_db', JSON.stringify(appData));
+            } catch(e) {
+                console.error("Storage save failed", e);
+            }
+        }
+
+        function loadSavedState() {
+            try {
+                const saved = localStorage.getItem('scout_masaran_rekap_db');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    appData = { ...appData, ...parsed };
+                }
+            } catch(e) {
+                console.error("Storage load failed", e);
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            const bgClass = type === 'success' ? 'bg-emerald-600 text-white border-emerald-400' :
+                            type === 'error' ? 'bg-red-600 text-white border-red-400' :
+                            'bg-amber-600 text-white border-amber-400';
+            const icon = type === 'success' ? 'fa-circle-check' : type === 'error' ? 'fa-triangle-exclamation' : 'fa-info-circle';
+
+            toast.className = `pointer-events-auto px-4 py-3 rounded-xl shadow-2xl border text-xs font-bold flex items-center gap-2.5 transform translate-y-2 opacity-0 transition-all duration-300 ${bgClass}`;
+            toast.innerHTML = `<i class="fa-solid ${icon} text-base"></i> <span>${message}</span>`;
+
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        function handleAdminLogin(event) {
+            event.preventDefault();
+            const kwarran = document.getElementById('admin-kwarran').value.trim();
+            const pass = document.getElementById('admin-pass').value.trim();
+
+            if (pass === '565656') {
+                appData.userRole = 'admin';
+                appData.userName = kwarran || 'KWARRAN MASARAN';
+                saveStateToLocalStorage();
+                loginSuccess();
+                showToast('Berhasil masuk sebagai Pembina / Admin!', 'success');
+            } else {
+                showToast('Password Admin salah! Silakan coba lagi.', 'error');
+            }
+        }
+
+        function handleGudepLogin(event) {
+            event.preventDefault();
+            const gudepName = document.getElementById('gudep-name-input').value.trim();
+
+            if (gudepName) {
+                appData.userRole = 'viewer';
+                appData.userName = gudepName;
+                saveStateToLocalStorage();
+                loginSuccess();
+                showToast(`Selamat datang, Gudep ${gudepName}!`, 'success');
+            } else {
+                showToast('Mohon masukkan nama Gudep!', 'warning');
+            }
+        }
+
+        function loginSuccess() {
+            document.getElementById('login-container').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            setupUIByRole();
+            switchTab('dashboard');
+            
+            // Trigger celebration confetti
+            confetti({
+                particleCount: 50,
+                spread: 60,
+                origin: { y: 0.6 }
+            });
+        }
+
+        function handleLogout() {
+            appData.userRole = null;
+            appData.userName = '';
+            saveStateToLocalStorage();
+            document.getElementById('main-app').classList.add('hidden');
+            document.getElementById('login-container').classList.remove('hidden');
+            document.getElementById('admin-pass').value = '';
+            showToast('Anda telah keluar.', 'info');
+        }
+
+        function setupUIByRole() {
+            const isViewer = appData.userRole === 'viewer';
+            const adminElements = document.querySelectorAll('.admin-only');
+            
+            adminElements.forEach(el => {
+                if (isViewer) {
+                    el.classList.add('hidden');
+                } else {
+                    el.classList.remove('hidden');
+                }
+            });
+
+            const roleBadge = document.getElementById('user-role-badge');
+            const loggedName = document.getElementById('logged-user-name');
+            const userInfo = document.getElementById('logged-user-info');
+
+            if (isViewer) {
+                roleBadge.innerText = 'Gudep (Viewer)';
+                roleBadge.className = 'text-emerald-400 font-semibold';
+                userInfo.classList.remove('hidden');
+                loggedName.innerText = appData.userName;
+            } else if (appData.userRole === 'admin') {
+                roleBadge.innerText = 'Admin Pembina';
+                roleBadge.className = 'text-gold font-semibold';
+                userInfo.classList.remove('hidden');
+                loggedName.innerText = 'KWARRAN 02 MASARAN';
+            }
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('app-sidebar');
+            sidebar.classList.toggle('hidden');
+        }
+
+        function switchTab(tabId) {
+            currentActiveTab = tabId;
+
+            // Hide all views
+            const views = ['dashboard', 'peserta', 'input-hiking', 'input-bola', 'input-pioneering', 'input-pensi', 'input-tenda', 'peringkat-umum'];
+            views.forEach(v => {
+                document.getElementById(`view-${v}`).classList.add('hidden');
+                
+                const topTab = document.getElementById(`tab-${v}`);
+                if (topTab) topTab.classList.remove('active');
+
+                const sideTab = document.getElementById(`side-${v}`);
+                if (sideTab) sideTab.classList.remove('active');
+            });
+
+            // Show target view
+            const targetView = document.getElementById(`view-${tabId}`);
+            if (targetView) targetView.classList.remove('hidden');
+
+            const activeTop = document.getElementById(`tab-${tabId}`);
+            if (activeTop) activeTop.classList.add('active');
+
+            const activeSide = document.getElementById(`side-${tabId}`);
+            if (activeSide) activeSide.classList.add('active');
+
+            // Populate form dropdowns and render view data
+            if (tabId === 'dashboard') renderDashboard();
+            if (tabId === 'peserta') renderPesertaTable();
+            if (tabId === 'input-hiking') { populateHikingPesertaDropdown(); renderHikingTable(); }
+            if (tabId === 'input-bola') { populateSinglePesertaDropdown('bola'); renderSingleLombaTable('bola'); }
+            if (tabId === 'input-pioneering') { populateSinglePesertaDropdown('pioneering'); renderSingleLombaTable('pioneering'); }
+            if (tabId === 'input-pensi') { populateGroupDropdown('pensi'); renderGroupTable('pensi'); }
+            if (tabId === 'input-tenda') { populateGroupDropdown('tenda'); renderGroupTable('tenda'); }
+            if (tabId === 'peringkat-umum') renderOverallLeaderboard();
+        }
+
+        function updateAllLombaLabels() {
+            const c = appData.compNames;
+            document.getElementById('lbl-dash-hiking').innerText = c.hiking.toUpperCase();
+            document.getElementById('lbl-dash-bola').innerText = c.bola.toUpperCase();
+            document.getElementById('lbl-dash-pioneering').innerText = c.pioneering.toUpperCase();
+            document.getElementById('lbl-dash-pensi').innerText = c.pensi.toUpperCase();
+            document.getElementById('lbl-dash-tenda').innerText = c.tenda.toUpperCase();
+
+            document.getElementById('side-lbl-hiking').innerText = c.hiking;
+            document.getElementById('side-lbl-bola').innerText = c.bola;
+            document.getElementById('side-lbl-pioneering').innerText = c.pioneering;
+            document.getElementById('side-lbl-pensi').innerText = c.pensi + ' (Kelompok)';
+            document.getElementById('side-lbl-tenda').innerText = c.tenda + ' (Kelompok)';
+
+            document.getElementById('title-lomba-hiking').innerText = `${c.hiking.toUpperCase()} (5 POS PENILAIAN)`;
+            document.getElementById('title-lomba-bola').innerText = c.bola.toUpperCase();
+            document.getElementById('title-lomba-pioneering').innerText = c.pioneering.toUpperCase();
+            document.getElementById('title-lomba-pensi').innerText = c.pensi.toUpperCase();
+            document.getElementById('title-lomba-tenda').innerText = c.tenda.toUpperCase();
+        }
+
+        function openModalEditLomba() {
+            document.getElementById('edit-lomba-hiking').value = appData.compNames.hiking;
+            document.getElementById('edit-lomba-bola').value = appData.compNames.bola;
+            document.getElementById('edit-lomba-pioneering').value = appData.compNames.pioneering;
+            document.getElementById('edit-lomba-pensi').value = appData.compNames.pensi;
+            document.getElementById('edit-lomba-tenda').value = appData.compNames.tenda;
+            document.getElementById('modal-edit-lomba').classList.remove('hidden');
+        }
+
+        function closeModalEditLomba() {
+            document.getElementById('modal-edit-lomba').classList.add('hidden');
+        }
+
+        function saveCustomLombaNames(e) {
+            e.preventDefault();
+            appData.compNames.hiking = document.getElementById('edit-lomba-hiking').value.trim() || DEFAULT_COMP_NAMES.hiking;
+            appData.compNames.bola = document.getElementById('edit-lomba-bola').value.trim() || DEFAULT_COMP_NAMES.bola;
+            appData.compNames.pioneering = document.getElementById('edit-lomba-pioneering').value.trim() || DEFAULT_COMP_NAMES.pioneering;
+            appData.compNames.pensi = document.getElementById('edit-lomba-pensi').value.trim() || DEFAULT_COMP_NAMES.pensi;
+            appData.compNames.tenda = document.getElementById('edit-lomba-tenda').value.trim() || DEFAULT_COMP_NAMES.tenda;
+
+            saveStateToLocalStorage();
+            updateAllLombaLabels();
+            closeModalEditLomba();
+            showToast('Nama lomba berhasil diperbarui!', 'success');
+        }
+
+        function renderPesertaTable() {
+            const tbody = document.getElementById('table-peserta-body');
+            const search = document.getElementById('search-peserta').value.toLowerCase();
+            tbody.innerHTML = '';
+
+            // Sort participants by number
+            let list = [...appData.peserta].sort((a, b) => parseInt(a.nomor) - parseInt(b.nomor));
+
+            if (search) {
+                list = list.filter(p => p.nomor.includes(search) || (p.gudep && p.gudep.toLowerCase().includes(search)));
+            }
+
+            if (list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-scout-400 font-medium">Belum ada data peserta terdaftar.</td></tr>`;
+                return;
+            }
+
+            list.forEach((p, idx) => {
+                const tr = document.createElement('tr');
+                const isPa = p.jk === 'Putra';
+                tr.innerHTML = `
+                    <td class="p-3.5 text-center font-bold text-scout-300">${idx + 1}</td>
+                    <td class="p-3.5 font-bold text-white font-mono">No. ${p.nomor}</td>
+                    <td class="p-3.5 text-scout-100 font-semibold">${p.gudep || '<span class="text-scout-400 italic">Belum diisi</span>'}</td>
+                    <td class="p-3.5 text-center">
+                        <span class="px-2.5 py-1 rounded-full text-xs font-bold ${isPa ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' : 'bg-pink-500/20 text-pink-300 border border-pink-500/30'}">
+                            ${p.jk}
+                        </span>
+                    </td>
+                    <td class="p-3.5 text-center admin-only">
+                        <div class="flex items-center justify-center gap-1.5">
+                            <button onclick="editPeserta('${p.id}')" class="p-1.5 rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500 hover:text-white transition-all text-xs" title="Edit">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                            <button onclick="deletePeserta('${p.id}')" class="p-1.5 rounded-lg bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white transition-all text-xs" title="Hapus">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            setupUIByRole();
+        }
+
+        function savePeserta(e) {
+            e.preventDefault();
+            const editId = document.getElementById('peserta-edit-id').value;
+            const nomor = document.getElementById('input-nomor-peserta').value.trim();
+            const jk = document.getElementById('input-jk-peserta').value;
+            const gudep = document.getElementById('input-gudep-peserta').value.trim();
+
+            if (!nomor || !jk) {
+                showToast('Nomor dan Jenis Kelamin wajib diisi!', 'warning');
+                return;
+            }
+
+            if (editId) {
+                // Update
+                const p = appData.peserta.find(x => x.id === editId);
+                if (p) {
+                    p.nomor = nomor;
+                    p.jk = jk;
+                    p.gudep = gudep;
+                    showToast('Data peserta berhasil diperbarui!', 'success');
+                }
+            } else {
+                // Check duplicate same number & gender
+                const exist = appData.peserta.find(x => x.nomor === nomor && x.jk === jk);
+                if (exist) {
+                    showToast(`Peserta No. ${nomor} (${jk}) sudah terdaftar!`, 'error');
+                    return;
+                }
+
+                const newPeserta = {
+                    id: 'P' + Date.now().toString().slice(-6),
+                    nomor,
+                    jk,
+                    gudep
+                };
+                appData.peserta.push(newPeserta);
+                showToast('Peserta baru berhasil ditambahkan!', 'success');
+            }
+
+            saveStateToLocalStorage();
+            cancelEditPeserta();
+            renderPesertaTable();
+        }
+
+        function editPeserta(id) {
+            const p = appData.peserta.find(x => x.id === id);
+            if (!p) return;
+
+            document.getElementById('peserta-edit-id').value = p.id;
+            document.getElementById('input-nomor-peserta').value = p.nomor;
+            document.getElementById('input-jk-peserta').value = p.jk;
+            document.getElementById('input-gudep-peserta').value = p.gudep || '';
+
+            document.getElementById('peserta-form-title').innerHTML = `<i class="fa-solid fa-pen text-amber-400 mr-1"></i> Edit Data Peserta No. ${p.nomor}`;
+            document.getElementById('btn-save-peserta-lbl').innerText = 'Perbarui Data';
+            document.getElementById('btn-cancel-peserta').classList.remove('hidden');
+
+            window.scrollTo({ top: 100, behavior: 'smooth' });
+        }
+
+        function cancelEditPeserta() {
+            document.getElementById('peserta-edit-id').value = '';
+            document.getElementById('form-peserta').reset();
+            document.getElementById('peserta-form-title').innerHTML = `<i class="fa-solid fa-plus-circle text-emerald-400 mr-1"></i> Form Input Data Peserta`;
+            document.getElementById('btn-save-peserta-lbl').innerText = 'Simpan Data Peserta';
+            document.getElementById('btn-cancel-peserta').classList.add('hidden');
+        }
+
+        function deletePeserta(id) {
+            if (!confirm('Apakah Anda yakin ingin menghapus peserta ini beserta semua nilainya?')) return;
+
+            appData.peserta = appData.peserta.filter(x => x.id !== id);
+            delete appData.hikingScores[id];
+            delete appData.bolaScores[id];
+            delete appData.pioneeringScores[id];
+
+            saveStateToLocalStorage();
+            renderPesertaTable();
+            showToast('Peserta telah dihapus.', 'info');
+        }
+
+        function populateHikingPesertaDropdown() {
+            const select = document.getElementById('hiking-peserta-id');
+            select.innerHTML = '<option value="">-- Pilih Peserta --</option>';
+
+            const list = [...appData.peserta].sort((a,b) => parseInt(a.nomor) - parseInt(b.nomor));
+            list.forEach(p => {
+                const name = `No. ${p.nomor} [${p.jk}] - ${p.gudep || 'Gudep'}`;
+                select.innerHTML += `<option value="${p.id}">${name}</option>`;
+            });
+
+            select.onchange = function() {
+                const pid = this.value;
+                if (pid && appData.hikingScores[pid]) {
+                    const s = appData.hikingScores[pid];
+                    document.getElementById('h-sandi').value = s.sandi;
+                    document.getElementById('h-dasa').value = s.dasa;
+                    document.getElementById('h-mata').value = s.mata;
+                    document.getElementById('h-asean').value = s.asean;
+                    document.getElementById('h-simpul').value = s.simpul;
+
+                    // convert timeMs back to min, sec, ms
+                    const totalMs = s.timeMs || 0;
+                    const min = Math.floor(totalMs / 60000);
+                    const sec = Math.floor((totalMs % 60000) / 1000);
+                    const ms = totalMs % 1000;
+
+                    document.getElementById('h-min').value = min;
+                    document.getElementById('h-sec').value = sec;
+                    document.getElementById('h-ms').value = ms;
+                } else {
+                    document.getElementById('h-sandi').value = '';
+                    document.getElementById('h-dasa').value = '';
+                    document.getElementById('h-mata').value = '';
+                    document.getElementById('h-asean').value = '';
+                    document.getElementById('h-simpul').value = '';
+                    document.getElementById('h-min').value = '';
+                    document.getElementById('h-sec').value = '';
+                    document.getElementById('h-ms').value = '';
+                }
+            };
+        }
+
+        function saveHikingScore(e) {
+            e.preventDefault();
+            const pid = document.getElementById('hiking-peserta-id').value;
+            if (!pid) { showToast('Pilih peserta terlebih dahulu!', 'warning'); return; }
+
+            const sandi = parseFloat(document.getElementById('h-sandi').value) || 0;
+            const dasa = parseFloat(document.getElementById('h-dasa').value) || 0;
+            const mata = parseFloat(document.getElementById('h-mata').value) || 0;
+            const asean = parseFloat(document.getElementById('h-asean').value) || 0;
+            const simpul = parseFloat(document.getElementById('h-simpul').value) || 0;
+
+            const min = parseInt(document.getElementById('h-min').value) || 0;
+            const sec = parseInt(document.getElementById('h-sec').value) || 0;
+            const ms = parseInt(document.getElementById('h-ms').value) || 0;
+
+            const totalTimeMs = (min * 60000) + (sec * 1000) + ms;
+
+            appData.hikingScores[pid] = {
+                sandi, dasa, mata, asean, simpul, timeMs: totalTimeMs
+            };
+
+            saveStateToLocalStorage();
+            renderHikingTable();
+            showToast('Nilai Hiking berhasil disimpan!', 'success');
+        }
+
+        function switchHikingGender(gender) {
+            currentHikingGender = gender;
+            const tabPa = document.getElementById('tab-hiking-pa');
+            const tabPi = document.getElementById('tab-hiking-pi');
+
+            if (gender === 'Putra') {
+                tabPa.className = "px-5 py-2.5 font-bold text-xs uppercase tracking-wider border-b-2 border-amber-400 text-amber-300 flex items-center gap-2";
+                tabPi.className = "px-5 py-2.5 font-bold text-xs uppercase tracking-wider border-b-2 border-transparent text-scout-400 hover:text-white flex items-center gap-2";
+            } else {
+                tabPi.className = "px-5 py-2.5 font-bold text-xs uppercase tracking-wider border-b-2 border-amber-400 text-amber-300 flex items-center gap-2";
+                tabPa.className = "px-5 py-2.5 font-bold text-xs uppercase tracking-wider border-b-2 border-transparent text-scout-400 hover:text-white flex items-center gap-2";
+            }
+
+            renderHikingTable();
+        }
+
+        function formatTimeMs(timeMs) {
+            if (!timeMs && timeMs !== 0) return '-';
+            const min = Math.floor(timeMs / 60000);
+            const sec = Math.floor((timeMs % 60000) / 1000);
+            const ms = timeMs % 1000;
+            return `${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}.${String(ms).padStart(3,'0')}`;
+        }
+
+        function renderHikingTable() {
+            const tbody = document.getElementById('table-hiking-body');
+            tbody.innerHTML = '';
+
+            const list = appData.peserta.filter(p => p.jk === currentHikingGender);
+
+            // Compute total scores & prepare sort array
+            const computed = list.map(p => {
+                const s = appData.hikingScores[p.id] || { sandi: 0, dasa: 0, mata: 0, asean: 0, simpul: 0, timeMs: 99999999 };
+                const total = s.sandi + s.dasa + s.mata + s.asean + s.simpul;
+                return {
+                    peserta: p,
+                    scores: s,
+                    totalScore: total,
+                    timeMs: s.timeMs || 99999999
+                };
+            });
+
+            // Ranking tie-breaker: Highest Total Score -> Fastest Time (lowest ms)
+            computed.sort((a, b) => {
+                if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
+                return a.timeMs - b.timeMs;
+            });
+
+            if (computed.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="11" class="p-6 text-center text-scout-400">Belum ada peserta ${currentHikingGender} terdaftar.</td></tr>`;
+                return;
+            }
+
+            computed.forEach((item, idx) => {
+                const p = item.peserta;
+                const s = item.scores;
+                const rank = idx + 1;
+                
+                let rankBadge = `<span class="font-bold font-mono text-scout-300">${rank}</span>`;
+                if (rank === 1) rankBadge = `<span class="w-6 h-6 rounded-full bg-gold text-scout-950 font-extrabold flex items-center justify-center text-xs shadow-md mx-auto">1</span>`;
+                if (rank === 2) rankBadge = `<span class="w-6 h-6 rounded-full bg-silver text-scout-950 font-extrabold flex items-center justify-center text-xs shadow-md mx-auto">2</span>`;
+                if (rank === 3) rankBadge = `<span class="w-6 h-6 rounded-full bg-bronze text-white font-extrabold flex items-center justify-center text-xs shadow-md mx-auto">3</span>`;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-3 text-center">${rankBadge}</td>
+                    <td class="p-3 font-bold text-white font-mono">No. ${p.nomor}</td>
+                    <td class="p-3 text-scout-100">${p.gudep || '-'}</td>
+                    <td class="p-3 text-center font-mono">${s.sandi}</td>
+                    <td class="p-3 text-center font-mono">${s.dasa}</td>
+                    <td class="p-3 text-center font-mono">${s.mata}</td>
+                    <td class="p-3 text-center font-mono">${s.asean}</td>
+                    <td class="p-3 text-center font-mono">${s.simpul}</td>
+                    <td class="p-3 text-center font-mono text-amber-300 font-bold">${formatTimeMs(s.timeMs)}</td>
+                    <td class="p-3 text-center font-bold text-gold font-mono bg-scout-950/40 text-sm">${item.totalScore.toFixed(2)}</td>
+                    <td class="p-3 text-center admin-only">
+                        <button onclick="editHikingFor('${p.id}')" class="px-2 py-1 bg-amber-500/20 text-amber-300 hover:bg-amber-500 hover:text-white rounded text-xs" title="Edit Nilai">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            setupUIByRole();
+        }
+
+        function editHikingFor(pid) {
+            document.getElementById('hiking-peserta-id').value = pid;
+            document.getElementById('hiking-peserta-id').dispatchEvent(new Event('change'));
+            window.scrollTo({ top: 120, behavior: 'smooth' });
+        }
+
+        function populateSinglePesertaDropdown(compKey) {
+            const select = document.getElementById(`${compKey}-peserta-id`);
+            select.innerHTML = '<option value="">-- Pilih Peserta --</option>';
+
+            const list = [...appData.peserta].sort((a,b) => parseInt(a.nomor) - parseInt(b.nomor));
+            list.forEach(p => {
+                select.innerHTML += `<option value="${p.id}">No. ${p.nomor} [${p.jk}] - ${p.gudep || 'Gudep'}</option>`;
+            });
+
+            select.onchange = function() {
+                const pid = this.value;
+                const scores = compKey === 'bola' ? appData.bolaScores : appData.pioneeringScores;
+                document.getElementById(`${compKey}-score`).value = (pid && scores[pid] !== undefined) ? scores[pid] : '';
+            };
+        }
+
+        function saveSingleScore(e, compKey) {
+            e.preventDefault();
+            const pid = document.getElementById(`${compKey}-peserta-id`).value;
+            const val = parseFloat(document.getElementById(`${compKey}-score`).value) || 0;
+
+            if (!pid) { showToast('Pilih peserta terlebih dahulu!', 'warning'); return; }
+
+            if (compKey === 'bola') appData.bolaScores[pid] = val;
+            if (compKey === 'pioneering') appData.pioneeringScores[pid] = val;
+
+            saveStateToLocalStorage();
+            renderSingleLombaTable(compKey);
+            showToast(`Nilai ${appData.compNames[compKey]} berhasil disimpan!`, 'success');
+        }
+
+        function renderSingleLombaTable(compKey) {
+            const scoresMap = compKey === 'bola' ? appData.bolaScores : appData.pioneeringScores;
+
+            ['Putra', 'Putri'].forEach(jk => {
+                const suffix = jk === 'Putra' ? 'pa' : 'pi';
+                const tbody = document.getElementById(`table-${compKey}-${suffix}`);
+                tbody.innerHTML = '';
+
+                const list = appData.peserta.filter(p => p.jk === jk);
+                
+                const computed = list.map(p => ({
+                    peserta: p,
+                    score: scoresMap[p.id] || 0
+                }));
+
+                // Sort by highest score
+                computed.sort((a,b) => b.score - a.score);
+
+                if (computed.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-scout-400">Belum ada data.</td></tr>`;
+                    return;
+                }
+
+                computed.forEach((item, idx) => {
+                    const p = item.peserta;
+                    const rank = idx + 1;
+                    let rankBadge = `<span class="font-bold text-scout-300">${rank}</span>`;
+                    if (rank === 1) rankBadge = `<span class="w-5 h-5 rounded-full bg-gold text-scout-950 font-bold flex items-center justify-center text-[11px]">1</span>`;
+                    if (rank === 2) rankBadge = `<span class="w-5 h-5 rounded-full bg-silver text-scout-950 font-bold flex items-center justify-center text-[11px]">2</span>`;
+                    if (rank === 3) rankBadge = `<span class="w-5 h-5 rounded-full bg-bronze text-white font-bold flex items-center justify-center text-[11px]">3</span>`;
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="p-3 text-center">${rankBadge}</td>
+                        <td class="p-3 font-bold text-white font-mono">No. ${p.nomor}</td>
+                        <td class="p-3 text-scout-200">${p.gudep || '-'}</td>
+                        <td class="p-3 text-center font-bold text-gold font-mono">${item.score.toFixed(2)}</td>
+                        <td class="p-3 text-center admin-only">
+                            <button onclick="editSingleFor('${compKey}', '${p.id}')" class="p-1 rounded bg-amber-500/20 text-amber-300 hover:bg-amber-500 text-xs">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            });
+            setupUIByRole();
+        }
+
+        function editSingleFor(compKey, pid) {
+            const select = document.getElementById(`${compKey}-peserta-id`);
+            select.value = pid;
+            select.dispatchEvent(new Event('change'));
+            window.scrollTo({ top: 120, behavior: 'smooth' });
+        }
+
+        function getUniqueGudepList() {
+            // Group participants by Gudep Number
+            const map = {};
+            appData.peserta.forEach(p => {
+                if (!map[p.nomor]) {
+                    map[p.nomor] = {
+                        nomor: p.nomor,
+                        gudep: p.gudep || `Gudep No. ${p.nomor}`,
+                        hasPa: false,
+                        hasPi: false
+                    };
+                }
+                if (p.jk === 'Putra') map[p.nomor].hasPa = true;
+                if (p.jk === 'Putri') map[p.nomor].hasPi = true;
+                if (p.gudep && !map[p.nomor].gudep.includes(p.gudep)) {
+                    map[p.nomor].gudep = p.gudep;
+                }
+            });
+            return Object.values(map).sort((a,b) => parseInt(a.nomor) - parseInt(b.nomor));
+        }
+
+        function populateGroupDropdown(compKey) {
+            const select = document.getElementById(`${compKey}-gudep-no`);
+            select.innerHTML = '<option value="">-- Pilih Regu Gudep --</option>';
+
+            const gudepList = getUniqueGudepList();
+            gudepList.forEach(g => {
+                const compStr = (g.hasPa && g.hasPi) ? 'Putra & Putri' : g.hasPa ? 'Putra Saja' : 'Putri Saja';
+                select.innerHTML += `<option value="${g.nomor}">Gudep No. ${g.nomor} - ${g.gudep} (${compStr})</option>`;
+            });
+
+            select.onchange = function() {
+                const no = this.value;
+                const map = compKey === 'pensi' ? appData.pensiScores : appData.tendaScores;
+                document.getElementById(`${compKey}-score`).value = (no && map[no] !== undefined) ? map[no] : '';
+            };
+        }
+
+        function saveGroupScore(e, compKey) {
+            e.preventDefault();
+            const gudepNo = document.getElementById(`${compKey}-gudep-no`).value;
+            const score = parseFloat(document.getElementById(`${compKey}-score`).value) || 0;
+
+            if (!gudepNo) { showToast('Pilih regu gudep terlebih dahulu!', 'warning'); return; }
+
+            if (compKey === 'pensi') appData.pensiScores[gudepNo] = score;
+            if (compKey === 'tenda') appData.tendaScores[gudepNo] = score;
+
+            saveStateToLocalStorage();
+            renderGroupTable(compKey);
+            showToast(`Nilai kelompok ${appData.compNames[compKey]} berhasil disimpan!`, 'success');
+        }
+
+        function renderGroupTable(compKey) {
+            const tbody = document.getElementById(`table-${compKey}-body`);
+            tbody.innerHTML = '';
+
+            const scoresMap = compKey === 'pensi' ? appData.pensiScores : appData.tendaScores;
+            const gudepList = getUniqueGudepList();
+
+            const computed = gudepList.map(g => ({
+                gudepObj: g,
+                score: scoresMap[g.nomor] || 0
+            }));
+
+            computed.sort((a,b) => b.score - a.score);
+
+            if (computed.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-scout-400">Belum ada gudep terdaftar.</td></tr>`;
+                return;
+            }
+
+            computed.forEach((item, idx) => {
+                const g = item.gudepObj;
+                const rank = idx + 1;
+
+                let rankBadge = `<span class="font-bold text-scout-300">${rank}</span>`;
+                if (rank === 1) rankBadge = `<span class="w-6 h-6 rounded-full bg-gold text-scout-950 font-extrabold flex items-center justify-center text-xs shadow-md mx-auto">1</span>`;
+                if (rank === 2) rankBadge = `<span class="w-6 h-6 rounded-full bg-silver text-scout-950 font-extrabold flex items-center justify-center text-xs shadow-md mx-auto">2</span>`;
+                if (rank === 3) rankBadge = `<span class="w-6 h-6 rounded-full bg-bronze text-white font-extrabold flex items-center justify-center text-xs shadow-md mx-auto">3</span>`;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-3 text-center">${rankBadge}</td>
+                    <td class="p-3 font-bold text-white font-mono">Gudep No. ${g.nomor}</td>
+                    <td class="p-3 text-scout-100 font-semibold">${g.gudep}</td>
+                    <td class="p-3 text-center">
+                        <span class="px-2 py-0.5 rounded text-[11px] bg-scout-900 border border-scout-400/30 text-scout-300">
+                            ${g.hasPa && g.hasPi ? 'Pa & Pi' : g.hasPa ? 'Pa Saja' : 'Pi Saja'}
+                        </span>
+                    </td>
+                    <td class="p-3 text-center font-bold text-gold font-mono bg-scout-950/40 text-sm">${item.score.toFixed(2)}</td>
+                    <td class="p-3 text-center admin-only">
+                        <button onclick="editGroupFor('${compKey}', '${g.nomor}')" class="px-2 py-1 bg-amber-500/20 text-amber-300 hover:bg-amber-500 hover:text-white rounded text-xs">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            setupUIByRole();
+        }
+
+        function editGroupFor(compKey, gudepNo) {
+            const select = document.getElementById(`${compKey}-gudep-no`);
+            select.value = gudepNo;
+            select.dispatchEvent(new Event('change'));
+            window.scrollTo({ top: 120, behavior: 'smooth' });
+        }
+
+        function calculateOverallGudepScores() {
+            const gudepList = getUniqueGudepList();
+
+            return gudepList.map(g => {
+                // Find participants belonging to this gudep number
+                const pa = appData.peserta.find(p => p.nomor === g.nomor && p.jk === 'Putra');
+                const pi = appData.peserta.find(p => p.nomor === g.nomor && p.jk === 'Putri');
+
+                // Hiking total
+                const hikPa = pa && appData.hikingScores[pa.id] ? (appData.hikingScores[pa.id].sandi + appData.hikingScores[pa.id].dasa + appData.hikingScores[pa.id].mata + appData.hikingScores[pa.id].asean + appData.hikingScores[pa.id].simpul) : 0;
+                const hikPi = pi && appData.hikingScores[pi.id] ? (appData.hikingScores[pi.id].sandi + appData.hikingScores[pi.id].dasa + appData.hikingScores[pi.id].mata + appData.hikingScores[pi.id].asean + appData.hikingScores[pi.id].simpul) : 0;
+
+                // Bola Pantul
+                const bolaPa = pa && appData.bolaScores[pa.id] !== undefined ? appData.bolaScores[pa.id] : 0;
+                const bolaPi = pi && appData.bolaScores[pi.id] !== undefined ? appData.bolaScores[pi.id] : 0;
+
+                // Pioneering
+                const pioPa = pa && appData.pioneeringScores[pa.id] !== undefined ? appData.pioneeringScores[pa.id] : 0;
+                const pioPi = pi && appData.pioneeringScores[pi.id] !== undefined ? appData.pioneeringScores[pi.id] : 0;
+
+                // Group
+                const pensi = appData.pensiScores[g.nomor] || 0;
+                const tenda = appData.tendaScores[g.nomor] || 0;
+
+                const grandTotal = hikPa + hikPi + bolaPa + bolaPi + pioPa + pioPi + pensi + tenda;
+
+                return {
+                    gudepNo: g.nomor,
+                    gudepName: g.gudep,
+                    hikPa, hikPi,
+                    bolaPa, bolaPi,
+                    pioPa, pioPi,
+                    pensi, tenda,
+                    grandTotal
+                };
+            }).sort((a,b) => b.grandTotal - a.grandTotal);
+        }
+
+        function switchOverallCategory(cat) {
+            currentOverallFilter = cat;
+            const btnG = document.getElementById('btn-ov-gudep');
+            const btnPa = document.getElementById('btn-ov-putra');
+            const btnPi = document.getElementById('btn-ov-putri');
+
+            [btnG, btnPa, btnPi].forEach(b => b.className = "px-4 py-2 rounded-xl text-xs font-bold bg-scout-800 text-scout-300 hover:text-white");
+
+            if (cat === 'gudep') btnG.className = "px-4 py-2 rounded-xl text-xs font-bold bg-amber-500 text-scout-950 shadow-md";
+            if (cat === 'putra') btnPa.className = "px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 text-white shadow-md";
+            if (cat === 'putri') btnPi.className = "px-4 py-2 rounded-xl text-xs font-bold bg-pink-600 text-white shadow-md";
+
+            renderOverallLeaderboard();
+        }
+
+        function renderOverallLeaderboard() {
+            const title = document.getElementById('overall-table-title');
+            const thead = document.getElementById('overall-table-header');
+            const tbody = document.getElementById('overall-table-body');
+            const podium = document.getElementById('gudep-podium-container');
+
+            tbody.innerHTML = '';
+            podium.innerHTML = '';
+
+            const c = appData.compNames;
+
+            if (currentOverallFilter === 'gudep') {
+                title.innerHTML = `<i class="fa-solid fa-trophy text-gold"></i> Peringkat Umum Pangkalan Gudep SD (Total Skor Kumulatif)`;
+                podium.classList.remove('hidden');
+
+                thead.innerHTML = `
+                    <th class="p-3 text-center w-12">Rank</th>
+                    <th class="p-3">No Gudep</th>
+                    <th class="p-3">Nama Pangkalan Gudep</th>
+                    <th class="p-3 text-center">${c.hiking} (Pa+Pi)</th>
+                    <th class="p-3 text-center">${c.bola} (Pa+Pi)</th>
+                    <th class="p-3 text-center">${c.pioneering} (Pa+Pi)</th>
+                    <th class="p-3 text-center">${c.pensi}</th>
+                    <th class="p-3 text-center">${c.tenda}</th>
+                    <th class="p-3 text-center text-gold font-bold bg-scout-900">Total Skor</th>
+                `;
+
+                const data = calculateOverallGudepScores();
+                document.getElementById('ov-count-info').innerText = `${data.length} Pangkalan`;
+
+                // Render Top 3 Podium Cards
+                if (data.length > 0) {
+                    const top1 = data[0];
+                    const top2 = data[1];
+                    const top3 = data[2];
+
+                    if (top1) {
+                        podium.innerHTML += `
+                            <div class="morph-card p-5 rounded-2xl bg-gradient-to-br from-amber-500/20 via-scout-900 to-amber-950/40 border border-amber-500/50 text-center relative overflow-hidden order-1 md:order-2">
+                                <div class="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-gold text-scout-950 text-[10px] font-extrabold uppercase">JUARA 1</div>
+                                <div class="w-12 h-12 rounded-full bg-gold text-scout-950 font-black text-xl flex items-center justify-center mx-auto mb-2 shadow-lg ring-4 ring-gold/30">1</div>
+                                <h4 class="font-extrabold text-white text-base">${top1.gudepName}</h4>
+                                <p class="text-xs text-scout-300 font-mono">No Gudep ${top1.gudepNo}</p>
+                                <div class="mt-3 py-1.5 bg-amber-500/20 rounded-xl text-gold font-black font-mono text-lg">${top1.grandTotal.toFixed(2)} Pts</div>
+                            </div>
+                        `;
+                    }
+                    if (top2) {
+                        podium.innerHTML += `
+                            <div class="morph-card p-5 rounded-2xl bg-gradient-to-br from-slate-500/20 via-scout-900 to-slate-900/40 border border-slate-400/40 text-center relative order-2 md:order-1">
+                                <div class="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-silver text-scout-950 text-[10px] font-extrabold uppercase">JUARA 2</div>
+                                <div class="w-10 h-10 rounded-full bg-silver text-scout-950 font-black text-lg flex items-center justify-center mx-auto mb-2 shadow-lg">2</div>
+                                <h4 class="font-bold text-white text-sm">${top2.gudepName}</h4>
+                                <p class="text-xs text-scout-300 font-mono">No Gudep ${top2.gudepNo}</p>
+                                <div class="mt-3 py-1 bg-slate-500/20 rounded-xl text-slate-200 font-bold font-mono text-base">${top2.grandTotal.toFixed(2)} Pts</div>
+                            </div>
+                        `;
+                    }
+                    if (top3) {
+                        podium.innerHTML += `
+                            <div class="morph-card p-5 rounded-2xl bg-gradient-to-br from-amber-800/20 via-scout-900 to-amber-950/40 border border-amber-700/40 text-center relative order-3">
+                                <div class="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-bronze text-white text-[10px] font-extrabold uppercase">JUARA 3</div>
+                                <div class="w-10 h-10 rounded-full bg-bronze text-white font-black text-lg flex items-center justify-center mx-auto mb-2 shadow-lg">3</div>
+                                <h4 class="font-bold text-white text-sm">${top3.gudepName}</h4>
+                                <p class="text-xs text-scout-300 font-mono">No Gudep ${top3.gudepNo}</p>
+                                <div class="mt-3 py-1 bg-amber-800/20 rounded-xl text-amber-300 font-bold font-mono text-base">${top3.grandTotal.toFixed(2)} Pts</div>
+                            </div>
+                        `;
+                    }
+                }
+
+                data.forEach((row, idx) => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="p-3 text-center font-bold font-mono text-scout-300">${idx + 1}</td>
+                        <td class="p-3 font-bold text-white font-mono">Gudep ${row.gudepNo}</td>
+                        <td class="p-3 font-semibold text-scout-100">${row.gudepName}</td>
+                        <td class="p-3 text-center font-mono">${(row.hikPa + row.hikPi).toFixed(2)}</td>
+                        <td class="p-3 text-center font-mono">${(row.bolaPa + row.bolaPi).toFixed(2)}</td>
+                        <td class="p-3 text-center font-mono">${(row.pioPa + row.pioPi).toFixed(2)}</td>
+                        <td class="p-3 text-center font-mono">${row.pensi.toFixed(2)}</td>
+                        <td class="p-3 text-center font-mono">${row.tenda.toFixed(2)}</td>
+                        <td class="p-3 text-center font-black text-gold font-mono bg-scout-950/60 text-sm">${row.grandTotal.toFixed(2)}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+            } else {
+                podium.classList.add('hidden');
+                const jk = currentOverallFilter === 'putra' ? 'Putra' : 'Putri';
+                title.innerHTML = `<i class="fa-solid fa-users text-scout-300"></i> Rincian Skor Perorangan Regu ${jk}`;
+
+                thead.innerHTML = `
+                    <th class="p-3 text-center w-12">Rank</th>
+                    <th class="p-3">No Peserta</th>
+                    <th class="p-3">Pangkalan Gudep</th>
+                    <th class="p-3 text-center">${c.hiking} Total</th>
+                    <th class="p-3 text-center">${c.bola}</th>
+                    <th class="p-3 text-center">${c.pioneering}</th>
+                    <th class="p-3 text-center text-gold font-bold bg-scout-900">Total Skor Individu</th>
+                `;
+
+                const list = appData.peserta.filter(p => p.jk === jk);
+                
+                const computed = list.map(p => {
+                    const hikObj = appData.hikingScores[p.id] || { sandi: 0, dasa: 0, mata: 0, asean: 0, simpul: 0 };
+                    const hikTotal = hikObj.sandi + hikObj.dasa + hikObj.mata + hikObj.asean + hikObj.simpul;
+                    const bola = appData.bolaScores[p.id] || 0;
+                    const pio = appData.pioneeringScores[p.id] || 0;
+                    return {
+                        peserta: p,
+                        hikTotal, bola, pio,
+                        totalScore: hikTotal + bola + pio
+                    };
+                }).sort((a,b) => b.totalScore - a.totalScore);
+
+                document.getElementById('ov-count-info').innerText = `${computed.length} Peserta ${jk}`;
+
+                computed.forEach((row, idx) => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="p-3 text-center font-bold font-mono text-scout-300">${idx + 1}</td>
+                        <td class="p-3 font-bold text-white font-mono">No. ${row.peserta.nomor}</td>
+                        <td class="p-3 font-semibold text-scout-100">${row.peserta.gudep || '-'}</td>
+                        <td class="p-3 text-center font-mono">${row.hikTotal.toFixed(2)}</td>
+                        <td class="p-3 text-center font-mono">${row.bola.toFixed(2)}</td>
+                        <td class="p-3 text-center font-mono">${row.pio.toFixed(2)}</td>
+                        <td class="p-3 text-center font-black text-gold font-mono bg-scout-950/60 text-sm">${row.totalScore.toFixed(2)}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        }
+
+        function renderDashboard() {
+            const totalPeserta = appData.peserta.length;
+            const totalPa = appData.peserta.filter(p => p.jk === 'Putra').length;
+            const totalPi = appData.peserta.filter(p => p.jk === 'Putri').length;
+            const totalGudep = getUniqueGudepList().length;
+
+            document.getElementById('dash-stat-total').innerText = totalPeserta;
+            document.getElementById('dash-stat-pa').innerText = totalPa;
+            document.getElementById('dash-stat-pi').innerText = totalPi;
+            document.getElementById('dash-stat-gudep').innerText = totalGudep;
+
+            // Compute percentage of scored items
+            const totalPossible = (totalPeserta * 3) + (totalGudep * 2);
+            let scoredCount = Object.keys(appData.hikingScores).length + Object.keys(appData.bolaScores).length + Object.keys(appData.pioneeringScores).length + Object.keys(appData.pensiScores).length + Object.keys(appData.tendaScores).length;
+            
+            const pct = totalPossible > 0 ? Math.min(100, Math.round((scoredCount / totalPossible) * 100)) : 0;
+            document.getElementById('dash-stat-progress').innerText = `${pct}%`;
+
+            // Render Top Gudep Leaderboard Preview
+            const topGudeps = calculateOverallGudepScores().slice(0, 3);
+            const topListEl = document.getElementById('dash-top-gudep-list');
+            topListEl.innerHTML = '';
+
+            if (topGudeps.length === 0) {
+                topListEl.innerHTML = '<p class="text-xs text-scout-400 italic">Belum ada data skor gudep.</p>';
+            } else {
+                topGudeps.forEach((g, idx) => {
+                    const badge = idx === 0 ? 'bg-gold text-scout-950' : idx === 1 ? 'bg-silver text-scout-950' : 'bg-bronze text-white';
+                    topListEl.innerHTML += `
+                        <div class="flex items-center justify-between p-3 rounded-xl bg-scout-900/60 border border-scout-400/20">
+                            <div class="flex items-center gap-3">
+                                <span class="w-6 h-6 rounded-full ${badge} font-bold text-xs flex items-center justify-center">${idx + 1}</span>
+                                <div>
+                                    <div class="font-bold text-xs text-white">${g.gudepName}</div>
+                                    <div class="text-[10px] text-scout-300">No. Gudep ${g.gudepNo}</div>
+                                </div>
+                            </div>
+                            <span class="font-bold font-mono text-xs text-gold">${g.grandTotal.toFixed(2)} Pts</span>
+                        </div>
+                    `;
+                });
+            }
+
+            // Render Recent Peserta
+            const recents = [...appData.peserta].slice(-3).reverse();
+            const recentEl = document.getElementById('dash-recent-peserta-list');
+            recentEl.innerHTML = '';
+
+            if (recents.length === 0) {
+                recentEl.innerHTML = '<p class="text-xs text-scout-400 italic">Belum ada peserta.</p>';
+            } else {
+                recents.forEach(p => {
+                    recentEl.innerHTML += `
+                        <div class="flex items-center justify-between p-2.5 rounded-xl bg-scout-900/40 border border-scout-400/10 text-xs">
+                            <div class="flex items-center gap-2">
+                                <span class="px-2 py-0.5 rounded bg-scout-800 text-scout-300 font-mono font-bold">No. ${p.nomor}</span>
+                                <span class="text-white font-medium">${p.gudep || 'Gudep SD'}</span>
+                            </div>
+                            <span class="text-[11px] font-bold ${p.jk === 'Putra' ? 'text-blue-300' : 'text-pink-300'}">${p.jk}</span>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        function exportToExcel() {
+            try {
+                const wb = XLSX.utils.book_new();
+                
+                // 1. Overall Gudep Sheet
+                const gudepData = calculateOverallGudepScores().map((g, idx) => ({
+                    Peringkat: idx + 1,
+                    "Nomor Gudep": g.gudepNo,
+                    "Nama Pangkalan Gudep": g.gudepName,
+                    "Hiking (Pa+Pi)": g.hikPa + g.hikPi,
+                    "Bola Pantul (Pa+Pi)": g.bolaPa + g.bolaPi,
+                    "Pioneering (Pa+Pi)": g.pioPa + g.pioPi,
+                    "Pensi Kelompok": g.pensi,
+                    "Tapak Tenda Kelompok": g.tenda,
+                    "TOTAL SKOR KUMULATIF": g.grandTotal
+                }));
+                const ws1 = XLSX.utils.json_to_sheet(gudepData);
+                XLSX.utils.book_append_sheet(wb, ws1, "Peringkat Umum Gudep");
+
+                // 2. Data Peserta Sheet
+                const pesertaSheetData = appData.peserta.map((p, idx) => ({
+                    "No Urut": idx + 1,
+                    "Nomor Peserta": p.nomor,
+                    "Nama Pangkalan": p.gudep || "-",
+                    "Jenis Kelamin": p.jk
+                }));
+                const ws2 = XLSX.utils.json_to_sheet(pesertaSheetData);
+                XLSX.utils.book_append_sheet(wb, ws2, "Data Peserta");
+
+                // Download File
+                XLSX.writeFile(wb, `REKAP_NILAI_PRAMUKA_KWARRAN_MASARAN_${Date.now()}.xlsx`);
+                showToast('File Excel Rekapitulasi berhasil diunduh!', 'success');
+            } catch (err) {
+                console.error(err);
+                showToast('Gagal mengunduh Spreadsheet.', 'error');
+            }
+        }
+
+        function resetAllData() {
+            if (confirm('PERINGATAN: Apakah Anda yakin ingin mengosongkan semua data peserta dan nilai lomba? Data yang dihapus tidak dapat dikembalikan.')) {
+                appData.peserta = [];
+                appData.hikingScores = {};
+                appData.bolaScores = {};
+                appData.pioneeringScores = {};
+                appData.pensiScores = {};
+                appData.tendaScores = {};
+
+                saveStateToLocalStorage();
+                renderDashboard();
+                showToast('Semua data berhasil di-reset.', 'info');
+            }
+        }
+    </script>
+</body>
